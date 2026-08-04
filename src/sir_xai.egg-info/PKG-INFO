@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: sir-xai
+Version: 0.1.0
+Summary: XAI analysis (UMAP/t-SNE, Integrated Gradients, Attention Rollout) on a BayesFlow SIR-like model
+Requires-Python: >=3.10
+Requires-Dist: bayesflow
+Requires-Dist: keras>=3
+Requires-Dist: torch
+Requires-Dist: captum
+Requires-Dist: umap-learn
+Requires-Dist: scikit-learn
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Requires-Dist: pandas
+Requires-Dist: numpy
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: ruff; extra == "dev"

@@ -1,0 +1,23 @@
+[project]
+name = "sir-xai"
+version = "0.1.0"
+description = "XAI analysis (UMAP/t-SNE, Integrated Gradients, Attention Rollout) on a BayesFlow SIR-like model"
+requires-python = ">=3.10"
+dependencies = [
+    "bayesflow",
+    "keras>=3",
+    "torch",
+    "captum",
+    "umap-learn",
+    "scikit-learn",
+    "scipy",
+    "matplotlib",
+    "pandas",
+    "numpy",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

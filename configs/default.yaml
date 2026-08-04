@@ -1,0 +1,22 @@
+# Human-readable mirror of sir_xai.utils.config.Config, for reference /
+# future extension to a YAML-driven CLI (e.g. with hydra or a simple loader).
+seed: 2026
+population_size: 83000000
+horizon_days: 14
+
+training:
+  n_train_sims: 6000
+  n_val_sims: 300
+  epochs: 100
+  batch_size: 64
+
+diagnostics:
+  n_datasets: 300
+  n_samples: 1000
+
+xai:
+  target_param: lambd
+  n_latent_sims: 2000
+  n_ig_samples: 200
+  surrogate_n_sims: 6000
+  transformer_n_sims: 4000
