@@ -31,7 +31,8 @@ DEVICE = _report_device()
 class Config:
     seed: int = 2026
     population_size: float = 83e6
-    horizon_days: int = 60
+    # Increase to 30 or 60 if mu and D need a longer outbreak window to identify cleanly.
+    horizon_days: int = int(os.getenv("SIR_HORIZON_DAYS", "60"))
 
     n_train_sims: int = 6000
     n_val_sims: int = 300

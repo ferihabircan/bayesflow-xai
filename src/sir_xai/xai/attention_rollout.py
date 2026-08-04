@@ -3,6 +3,7 @@
 rollout is implemented directly against our custom nn.MultiheadAttention
 layers instead."""
 
+import math
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
@@ -12,11 +13,27 @@ from sir_xai.utils.config import CONFIG, PARAM_NAMES, DEVICE
 from sir_xai.utils.plotting import show_and_save
 
 
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model: int, max_len: int = 256):
+        super().__init__()
+        position = torch.arange(max_len, dtype=torch.float32).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2, dtype=torch.float32) * (-math.log(10000.0) / d_model))
+        pe = torch.zeros(max_len, d_model, dtype=torch.float32)
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        self.register_buffer("pe", pe.unsqueeze(0), persistent=False)
+
+    def forward(self, x):
+        return x + self.pe[:, :x.size(1)]
+
+
 class TransformerSummaryNet(nn.Module):
     def __init__(self, in_dim: int = 3, d_model: int = 32, n_heads: int = 4,
                  n_layers: int = 2, summary_dim: int = 8):
         super().__init__()
         self.in_proj = nn.Linear(in_dim, d_model)
+        self.pos_encoding = PositionalEncoding(d_model)
+        self.input_scale = math.sqrt(d_model)
         self.layers = nn.ModuleList(
             [nn.MultiheadAttention(d_model, n_heads, batch_first=True) for _ in range(n_layers)]
         )
@@ -30,7 +47,8 @@ class TransformerSummaryNet(nn.Module):
 
     def forward(self, x):
         self.attn_maps = []
-        h = self.in_proj(x)
+        h = self.in_proj(x) * self.input_scale
+        h = self.pos_encoding(h)
         for attn, norm, ffn in zip(self.layers, self.norms, self.ffns):
             attn_out, attn_w = attn(h, h, h, need_weights=True, average_attn_weights=True)
             h = norm(h + attn_out)

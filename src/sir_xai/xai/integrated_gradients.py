@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from sir_xai.utils.config import CONFIG, DEVICE
 from sir_xai.simulation.sir_model import prior, stationary_SIR
+from sir_xai.simulation.dataset import ensure_sir_fraction_scale
 from sir_xai.utils.plotting import show_and_save
 from sir_xai.xai.surrogate_models import train_sir_surrogate, TargetWrapper
 
@@ -40,6 +41,7 @@ def _sample_outbreak_trajectory(
     for try_idx in range(1, max_tries + 1):
         theta = prior()
         traj = stationary_SIR(**theta, return_full=True)
+        traj = {k: ensure_sir_fraction_scale(np.asarray(v)) for k, v in traj.items()}
         sample = np.stack([traj["S"], traj["I"], traj["R"]], axis=-1)
         peak_idx = int(np.argmax(traj["I"]))
         peak_value = float(traj["I"][peak_idx])
@@ -79,7 +81,12 @@ def integrated_gradients_analysis(
             print(f"{CHANNEL_NAMES[i]} vs {CHANNEL_NAMES[j]}: t={t:.3f}, p={p:.4g}")
 
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
-    axes[0].bar(CHANNEL_NAMES, stats_df["mean_abs_attribution"], yerr=stats_df["std_abs_attribution"], capsize=5)
+    mean_vals = stats_df["mean_abs_attribution"].to_numpy()
+    std_vals = stats_df["std_abs_attribution"].to_numpy()
+    lower_err = np.minimum(std_vals, mean_vals)
+    upper_err = std_vals
+    axes[0].bar(CHANNEL_NAMES, mean_vals, yerr=np.vstack([lower_err, upper_err]), capsize=5)
+    axes[0].set_ylim(bottom=0)
     axes[0].set_title(f"Mean |IG attribution| by population (target={target_name})")
     axes[0].set_ylabel("Sum |attribution| over time")
 
