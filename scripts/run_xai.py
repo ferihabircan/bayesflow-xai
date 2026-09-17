@@ -11,6 +11,7 @@ from sir_xai.xai.latent_space import latent_space_analysis
 from sir_xai.xai.integrated_gradients import (
     integrated_gradients_analysis,
     plot_dot_pixel_saliency_map,
+    plot_dot_pixel_saliency_for_all_samples,
     compute_channel_and_time_importance_stats,
 )
 from sir_xai.xai.attention_rollout import attention_rollout_analysis
@@ -18,7 +19,8 @@ from sir_xai.utils.config import PARAM_NAMES
 
 
 def main(target: str, skip_training: bool = False, sample_index: int = 0,
-         run_stats: bool = False, n_stats_samples: int = 200):
+         run_stats: bool = False, n_stats_samples: int = 200,
+         all_samples: bool = False, n_samples_plot: int = 10):
     target_idx = PARAM_NAMES.index(target)
 
     print("=== Building and training BayesFlow BasicWorkflow (for latent-space XAI) ===")
@@ -31,8 +33,15 @@ def main(target: str, skip_training: bool = False, sample_index: int = 0,
 
     print(f"\n=== XAI Part 2: Integrated Gradients (Captum) - target = {target} ===")
     integrated_gradients_analysis(target_idx=target_idx, target_name=target)
-    print(f"\n=== XAI Part 2b: Dot-pixel saliency map - target = {target}, sample = {sample_index} ===")
-    plot_dot_pixel_saliency_map(sample_index=sample_index, target_idx=target_idx, target_name=target)
+
+    if all_samples:
+        print(f"\n=== XAI Part 2b: Dot-pixel saliency map for {n_samples_plot} validation samples - target = {target} ===")
+        plot_dot_pixel_saliency_for_all_samples(
+            target_idx=target_idx, target_name=target, n_samples=n_samples_plot,
+        )
+    else:
+        print(f"\n=== XAI Part 2b: Dot-pixel saliency map - target = {target}, sample = {sample_index} ===")
+        plot_dot_pixel_saliency_map(sample_index=sample_index, target_idx=target_idx, target_name=target)
 
     print(f"\n=== XAI Part 3: Attention Rollout - target = {target} ===")
     attention_rollout_analysis(target_idx=target_idx, target_name=target)
@@ -57,7 +66,14 @@ if __name__ == "__main__":
                          help="run XAI Part 4: channel & time importance stats over many synthetic samples")
     parser.add_argument("--n-stats-samples", type=int, default=200,
                          help="number of synthetic outbreak samples to use for --stats (default: 200)")
+    parser.add_argument("--all-samples", action="store_true",
+                         help="render the dot-pixel saliency map for the first N validation samples "
+                              "(instead of one randomly-found outbreak sample), saved to "
+                              "outputs/figures/saliency_samples/")
+    parser.add_argument("--n-samples-plot", type=int, default=10,
+                         help="number of validation samples to plot with --all-samples (default: 10)")
     args = parser.parse_args()
 
-    main(args.target, args.skip_training, args.sample_index, args.stats, args.n_stats_samples)
+    main(args.target, args.skip_training, args.sample_index, args.stats, args.n_stats_samples,
+         args.all_samples, args.n_samples_plot)
     plt.show()

@@ -11,6 +11,7 @@ src/sir_xai/diagnostics/plots.py
 src/sir_xai/simulation/__init__.py
 src/sir_xai/simulation/adapter.py
 src/sir_xai/simulation/dataset.py
+src/sir_xai/simulation/lotka_volterra_model.py
 src/sir_xai/simulation/sir_model.py
 src/sir_xai/training/__init__.py
 src/sir_xai/training/networks.py

@@ -106,42 +106,11 @@ def integrated_gradients_analysis(
     return fig, stats_df, attributions
 
 
-def plot_dot_pixel_saliency_map(
-    sample_index: int = 0,
-    target_idx: int = 0,
-    target_name: str = "lambd",
-    inputs: torch.Tensor | None = None,
-    attributions: np.ndarray | None = None,
-):
-    if inputs is None or attributions is None:
-        sample_input_tensor, theta, peak_idx, peak_value, final_value, n_tries = _sample_outbreak_trajectory()
-        sample_input = sample_input_tensor.detach().cpu().numpy()
-        selected_label = (
-            f"real outbreak sample (found in {n_tries} tries, peak I={peak_value:.4f} at t={peak_idx}, final I={final_value:.4f}, "
-            f"R0={theta['lambd'] / theta['mu']:.2f})"
-        )
-
-        from captum.attr import IntegratedGradients
-
-        body, head, _, _ = train_sir_surrogate(n_sims=CONFIG.xai_surrogate_n_sims)
-        model = TargetWrapper(body, head, target_idx)
-        model.train()
-
-        inputs = sample_input_tensor.unsqueeze(0).to(DEVICE)
-        baseline = torch.zeros_like(inputs)
-        ig = IntegratedGradients(model)
-        with torch.enable_grad(), torch.backends.cudnn.flags(enabled=False):
-            attributions, _ = ig.attribute(inputs, baseline, return_convergence_delta=True)
-        attributions = attributions.detach().cpu().numpy()
-        sample_attr = np.abs(attributions[0])
-    else:
-        sample_index = max(0, min(sample_index, len(inputs) - 1))
-        sample_input = inputs[sample_index].detach().cpu().numpy()
-        sample_attr = np.abs(attributions[sample_index])
-        peak_idx = int(np.argmax(sample_input[:, 1]))
-        peak_value = float(sample_input[peak_idx, 1])
-        selected_label = f"sample={sample_index} (peak I={peak_value:.4f} at t={peak_idx})"
-
+def _render_dot_pixel_saliency(fig, ax1, ax2, sample_input, sample_attr, selected_label, target_name):
+    """Draws the S/I/R trajectory (ax1) and the pixel-weighted dot saliency
+    map (ax2) for a single sample onto the given axes. Shared by
+    plot_dot_pixel_saliency_map and plot_dot_pixel_saliency_for_all_samples
+    so both produce the exact same figure layout/styling."""
     time_steps = np.arange(sample_input.shape[0])
 
     def normalize(a):
@@ -150,8 +119,6 @@ def plot_dot_pixel_saliency_map(
     attr_s_norm = normalize(sample_attr[:, 0])
     attr_i_norm = normalize(sample_attr[:, 1])
     attr_r_norm = normalize(sample_attr[:, 2])
-
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
 
     ax1.plot(time_steps, sample_input[:, 0], color="#2ca02c", lw=2, label="Susceptible (S)")
     ax1.plot(time_steps, sample_input[:, 1], color="#d62728", lw=2, ls="--", label="Infected (I)")
@@ -212,10 +179,87 @@ def plot_dot_pixel_saliency_map(
     cbar_r = fig.colorbar(sc_r, ax=ax2, orientation="horizontal", pad=0.28, fraction=0.03)
     cbar_r.set_label("R Importance")
 
+
+def plot_dot_pixel_saliency_map(
+    sample_index: int = 0,
+    target_idx: int = 0,
+    target_name: str = "lambd",
+    inputs: torch.Tensor | None = None,
+    attributions: np.ndarray | None = None,
+):
+    if inputs is None or attributions is None:
+        sample_input_tensor, theta, peak_idx, peak_value, final_value, n_tries = _sample_outbreak_trajectory()
+        sample_input = sample_input_tensor.detach().cpu().numpy()
+        selected_label = (
+            f"real outbreak sample (found in {n_tries} tries, peak I={peak_value:.4f} at t={peak_idx}, final I={final_value:.4f}, "
+            f"R0={theta['lambd'] / theta['mu']:.2f})"
+        )
+
+        from captum.attr import IntegratedGradients
+
+        body, head, _, _ = train_sir_surrogate(n_sims=CONFIG.xai_surrogate_n_sims)
+        model = TargetWrapper(body, head, target_idx)
+        model.train()
+
+        inputs = sample_input_tensor.unsqueeze(0).to(DEVICE)
+        baseline = torch.zeros_like(inputs)
+        ig = IntegratedGradients(model)
+        with torch.enable_grad(), torch.backends.cudnn.flags(enabled=False):
+            attributions, _ = ig.attribute(inputs, baseline, return_convergence_delta=True)
+        attributions = attributions.detach().cpu().numpy()
+        sample_attr = np.abs(attributions[0])
+    else:
+        sample_index = max(0, min(sample_index, len(inputs) - 1))
+        sample_input = inputs[sample_index].detach().cpu().numpy()
+        sample_attr = np.abs(attributions[sample_index])
+        peak_idx = int(np.argmax(sample_input[:, 1]))
+        peak_value = float(sample_input[peak_idx, 1])
+        selected_label = f"sample={sample_index} (peak I={peak_value:.4f} at t={peak_idx})"
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+    _render_dot_pixel_saliency(fig, ax1, ax2, sample_input, sample_attr, selected_label, target_name)
+
     plt.tight_layout()
     os.makedirs("outputs", exist_ok=True)
     fig.savefig(os.path.join("outputs", "sir_dot_pixel_saliency_map.png"), dpi=300, bbox_inches="tight")
     return fig
+
+
+def plot_dot_pixel_saliency_for_all_samples(
+    target_idx: int = 0,
+    target_name: str = "lambd",
+    n_samples: int = 10,
+):
+    """Same figure as plot_dot_pixel_saliency_map (trajectory on top,
+    pixel-weighted dot saliency below), but instead of hunting for a single
+    random "real outbreak" sample, renders one figure per sample for the
+    first `n_samples` validation-set trajectories (X_val[:n_samples]) and
+    saves each to outputs/figures/saliency_samples/sample_XX.png."""
+    inputs, attributions, _ = _compute_ig_attributions(target_idx, n_samples=n_samples)
+    n = attributions.shape[0]  # actual count, capped by available val data
+
+    output_dir = os.path.join("outputs", "figures", "saliency_samples")
+    os.makedirs(output_dir, exist_ok=True)
+
+    saved_paths = []
+    for i in range(n):
+        sample_input = inputs[i].detach().cpu().numpy()
+        sample_attr = np.abs(attributions[i])
+        peak_idx = int(np.argmax(sample_input[:, 1]))
+        peak_value = float(sample_input[peak_idx, 1])
+        selected_label = f"sample {i + 1}/{n} (peak I={peak_value:.4f} at t={peak_idx})"
+
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+        _render_dot_pixel_saliency(fig, ax1, ax2, sample_input, sample_attr, selected_label, target_name)
+        plt.tight_layout()
+
+        out_path = os.path.join(output_dir, f"sample_{i + 1:02d}.png")
+        fig.savefig(out_path, dpi=300, bbox_inches="tight")
+        plt.close(fig)
+        saved_paths.append(out_path)
+        print(f"  saved {out_path}")
+
+    return saved_paths
 
 
 _DEFAULT_CHANNEL_COLORS = ["#2ca02c", "#d62728", "#1f77b4", "#9467bd", "#8c564b", "#e377c2"]
