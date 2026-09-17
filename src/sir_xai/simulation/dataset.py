@@ -1,10 +1,13 @@
 """Builds the explicit (S, I, R) tensor dataset used by the XAI surrogate
-models in xai/integrated_gradients.py and xai/attention_rollout.py."""
+models in xai/integrated_gradients.py and xai/attention_rollout.py. Also
+builds the parallel Lotka-Volterra-example tensor dataset (see
+lotka_volterra_model.py) for the same XAI surrogate pipeline."""
 
 import numpy as np
 import torch
 
 from sir_xai.simulation.sir_model import prior, stationary_SIR
+from sir_xai.simulation.lotka_volterra_model import sample_fn as lv_sample_fn
 from sir_xai.utils.config import CONFIG, PARAM_NAMES
 
 
@@ -32,4 +35,13 @@ def build_sir_tensor_dataset(n_sims: int):
 
     X = torch.tensor(np.stack(trajs), dtype=torch.float32)
     y = torch.tensor(np.log1p(np.array(thetas)), dtype=torch.float32)
+    return X, y
+
+
+def build_lv_tensor_dataset(n_sims: int):
+    """Returns X: (N, 20, 2) observables, y: (N, 3) theta (already in
+    [-1, 1], so unlike SIR's theta this needs no log1p transform)."""
+    data = lv_sample_fn((n_sims,))
+    X = torch.tensor(data["observables"], dtype=torch.float32)
+    y = torch.tensor(data["parameters"], dtype=torch.float32)
     return X, y

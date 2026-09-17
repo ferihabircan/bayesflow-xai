@@ -4,9 +4,11 @@ rollout is implemented directly against our custom nn.MultiheadAttention
 layers instead."""
 
 import math
+import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 from sir_xai.simulation.dataset import build_sir_tensor_dataset
 from sir_xai.utils.config import CONFIG, PARAM_NAMES, DEVICE
@@ -68,6 +70,85 @@ def attention_rollout(attn_maps: list[torch.Tensor]) -> torch.Tensor:
     return result
 
 
+def plot_bertviz_style_connections(
+    rollout_matrix,
+    day_labels: list[str] | None = None,
+    top_k: int = 15,
+    save_name: str = "xai_03b_attention_connections",
+):
+    """BertViz "head view"-style rendering of a (T, T) attention-rollout
+    matrix: a query-day column on the left, a key-day column on the right,
+    and a line between them for each of the top_k strongest connections per
+    query day (keeps the plot legible instead of drawing all T^2 lines).
+    Line width/opacity/color all scale with the attention weight."""
+
+    rollout_matrix = np.asarray(rollout_matrix)
+    T = rollout_matrix.shape[0]
+    if day_labels is None:
+        day_labels = [str(i) for i in range(T)]
+
+    top_k = min(top_k, T)
+    max_weight = rollout_matrix.max() if rollout_matrix.max() > 0 else 1.0
+
+    fig_height = max(6.0, T * 0.18)
+    fig, ax = plt.subplots(figsize=(6, fig_height))
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
+
+    query_x, key_x = 0.0, 1.0
+    # Day 0 at the top, day T-1 at the bottom, both columns aligned by day.
+    y_of_day = {i: T - 1 - i for i in range(T)}
+
+    cmap = plt.get_cmap("Blues")
+
+    for q in range(T):
+        row = rollout_matrix[q]
+        top_keys = np.argsort(-row)[:top_k]
+        for k in top_keys:
+            w = row[k]
+            if w <= 0:
+                continue
+            w_norm = w / max_weight
+            ax.plot(
+                [query_x, key_x],
+                [y_of_day[q], y_of_day[k]],
+                color=cmap(0.3 + 0.7 * w_norm),
+                linewidth=0.5 + 4.0 * w_norm,
+                alpha=0.15 + 0.75 * w_norm,
+                solid_capstyle="round",
+                zorder=1,
+            )
+
+    ax.scatter([query_x] * T, [y_of_day[i] for i in range(T)], color="#08306b", s=18, zorder=2)
+    ax.scatter([key_x] * T, [y_of_day[i] for i in range(T)], color="#08306b", s=18, zorder=2)
+
+    label_step = 1 if T <= 20 else 5
+    for i in range(T):
+        if i % label_step != 0 and i != T - 1:
+            continue
+        y = y_of_day[i]
+        ax.text(query_x - 0.04, y, day_labels[i], ha="right", va="center", fontsize=8)
+        ax.text(key_x + 0.04, y, day_labels[i], ha="left", va="center", fontsize=8)
+
+    ax.text(query_x, T + 0.5, "Query days", ha="center", va="bottom", fontsize=11, fontweight="bold")
+    ax.text(key_x, T + 0.5, "Key days", ha="center", va="bottom", fontsize=11, fontweight="bold")
+
+    ax.set_xlim(query_x - 0.3, key_x + 0.3)
+    ax.set_ylim(-1, T + 1.5)
+    ax.axis("off")
+    ax.set_title("Attention Rollout: Day-to-Day Information Flow (BertViz-style)", fontsize=12, pad=12)
+
+    legend_elements = [
+        Line2D([0], [0], color=cmap(0.3), lw=1.0, alpha=0.3, label="weak"),
+        Line2D([0], [0], color=cmap(1.0), lw=4.0, alpha=0.9, label="strong"),
+    ]
+    ax.legend(handles=legend_elements, loc="lower center", ncol=2, frameon=False,
+              bbox_to_anchor=(0.5, -0.04), fontsize=9, title=f"attention weight (top-{top_k}/query day)")
+
+    show_and_save(fig, save_name, "XAI 3b: Attention Connections (BertViz-style)")
+    return fig
+
+
 def _train_transformer(n_sims: int, epochs: int, batch_size: int = 64):
     X, y = build_sir_tensor_dataset(n_sims)
     n_val = int(0.1 * len(X))
@@ -119,12 +200,16 @@ def attention_rollout_analysis(target_idx: int = 0, target_name: str = "lambd",
     ax.set_title(f"Attention rollout - which days matter most (target={target_name})")
     show_and_save(fig_bar, "xai_03a_attention_rollout_bar", "XAI 3a: Attention Rollout (per day)")
 
+    rollout_matrix = rollout.mean(dim=0).cpu().numpy()
+
     fig_matrix, ax2 = plt.subplots(figsize=(6, 5))
-    im = ax2.imshow(rollout.mean(dim=0).cpu().numpy(), cmap="viridis")
+    im = ax2.imshow(rollout_matrix, cmap="viridis")
     ax2.set_title("Mean attention-rollout matrix (query day x key day)")
     ax2.set_xlabel("Key day")
     ax2.set_ylabel("Query day")
     fig_matrix.colorbar(im, ax=ax2)
     show_and_save(fig_matrix, "xai_03b_attention_rollout_matrix", "XAI 3b: Attention Rollout Matrix")
 
-    return fig_bar, fig_matrix, rollout
+    fig_connections = plot_bertviz_style_connections(rollout_matrix)
+
+    return fig_bar, fig_matrix, fig_connections, rollout

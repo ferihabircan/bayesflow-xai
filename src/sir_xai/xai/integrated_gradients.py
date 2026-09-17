@@ -16,15 +16,20 @@ from sir_xai.xai.surrogate_models import train_sir_surrogate, TargetWrapper
 CHANNEL_NAMES = ["S", "I", "R"]
 
 
-def _compute_ig_attributions(target_idx: int):
+def _compute_ig_attributions(
+    target_idx: int,
+    n_samples: int | None = None,
+    train_surrogate_fn=train_sir_surrogate,
+    n_sims: int | None = None,
+):
     from captum.attr import IntegratedGradients
 
-    body, head, X_val, _ = train_sir_surrogate(n_sims=CONFIG.xai_surrogate_n_sims)
+    body, head, X_val, _ = train_surrogate_fn(n_sims=n_sims if n_sims is not None else CONFIG.xai_surrogate_n_sims)
     model = TargetWrapper(body, head, target_idx)
     model.train()
 
     ig = IntegratedGradients(model)
-    n = min(CONFIG.xai_n_ig_samples, len(X_val))
+    n = min(n_samples if n_samples is not None else CONFIG.xai_n_ig_samples, len(X_val))
     inputs = X_val[:n].clone().requires_grad_(True)
     baseline = torch.zeros_like(inputs)
     with torch.enable_grad(), torch.backends.cudnn.flags(enabled=False):
@@ -211,3 +216,109 @@ def plot_dot_pixel_saliency_map(
     os.makedirs("outputs", exist_ok=True)
     fig.savefig(os.path.join("outputs", "sir_dot_pixel_saliency_map.png"), dpi=300, bbox_inches="tight")
     return fig
+
+
+_DEFAULT_CHANNEL_COLORS = ["#2ca02c", "#d62728", "#1f77b4", "#9467bd", "#8c564b", "#e377c2"]
+
+
+def compute_channel_and_time_importance_stats(
+    target_idx: int = 0,
+    target_name: str = "lambd",
+    n_samples: int = 200,
+    channel_names: list[str] = CHANNEL_NAMES,
+    train_surrogate_fn=train_sir_surrogate,
+    n_sims: int | None = None,
+    fig_name: str = "xai_04_channel_time_importance_stats",
+    time_unit_label: str = "Day",
+):
+    """Runs the same dot-pixel-saliency IG attribution over `n_samples`
+    synthetic trajectories (instead of just one) and aggregates, per
+    sample: which channel has the largest total |attribution|, and which
+    5 time steps are most/least important.
+
+    Generalized over the underlying simulator/surrogate: `channel_names`
+    labels whatever channels the surrogate's input has (e.g. S/I/R for the
+    SIR surrogate, X1/X2 for the Lotka-Volterra-example surrogate), and
+    `train_surrogate_fn` supplies the trained (body, head, X_val, y_val)
+    for that simulator (e.g. train_sir_surrogate / train_lv_surrogate from
+    xai/surrogate_models.py) -- this is the actual coupling point to a
+    specific simulator, since the raw simulator itself is only reached
+    indirectly through the surrogate's training dataset.
+
+    Endpoint artifact: every surrogate here (SIRGRUSummaryNet,
+    LVGRUSummaryNet) reads out only the GRU's final hidden state (see
+    surrogate_models.py), so the last time step's input reaches the output
+    through a single recurrent update while earlier steps' influence is
+    diluted through many compounded updates. This makes the first and last
+    time step dominate |IG attribution| almost by construction, regardless
+    of IG baseline (verified for the SIR surrogate with both zero- and
+    mean-baseline IG: the last step was argmax in 100% of samples under
+    both). top5_idx/bottom5_idx therefore exclude both endpoints so the
+    reported "important time steps" reflect the trajectory dynamics rather
+    than this architectural readout effect. Since this is a property of
+    the last-hidden-state GRU readout, not of any particular simulator, it
+    applies the same way to the Lotka-Volterra-example surrogate.
+    """
+
+    inputs, attributions, delta = _compute_ig_attributions(
+        target_idx, n_samples=n_samples, train_surrogate_fn=train_surrogate_fn, n_sims=n_sims,
+    )
+    n_samples = attributions.shape[0]  # actual count, capped by available val data
+    n_days = attributions.shape[1]
+    n_channels = attributions.shape[2]
+
+    abs_attr = np.abs(attributions)  # (n, T, n_channels)
+
+    channel_importance = abs_attr.sum(axis=1)  # (n, n_channels): total |attribution| per channel
+    dominant_channel = np.argmax(channel_importance, axis=1)  # (n,)
+
+    time_importance = abs_attr.sum(axis=2)  # (n, T): total |attribution| per time step
+
+    # Exclude the first and last time step (endpoint architecture artifact,
+    # see docstring) before ranking steps by importance. Ranks are computed
+    # on the interior slice [1:-1], then shifted by +1 to map back to the
+    # true time-step indices (0-based) for display/reporting.
+    interior_time_importance = time_importance[:, 1:-1]  # (n, T-2)
+    top5_idx = np.argsort(-interior_time_importance, axis=1)[:, :5] + 1  # (n, 5)
+    bottom5_idx = np.argsort(interior_time_importance, axis=1)[:, :5] + 1  # (n, 5)
+
+    channel_counts = np.bincount(dominant_channel, minlength=n_channels)
+
+    print(f"\n== IG channel/time importance stats over {n_samples} samples (target={target_name}) ==")
+    for name, count in zip(channel_names, channel_counts):
+        print(f"  {name}: dominant channel in {count}/{n_samples} samples ({100 * count / n_samples:.1f}%)")
+    print(f"mean convergence delta: {delta.abs().mean().item():.4f}")
+
+    fig, axes = plt.subplots(1, 3, figsize=(19, 5))
+
+    bar_colors = [_DEFAULT_CHANNEL_COLORS[i % len(_DEFAULT_CHANNEL_COLORS)] for i in range(n_channels)]
+    bars = axes[0].bar(channel_names, channel_counts, color=bar_colors)
+    axes[0].set_ylabel("# samples where channel is most important")
+    axes[0].set_title(f"Dominant channel across {n_samples} samples\n(target={target_name})")
+    axes[0].bar_label(bars)
+
+    endpoint_note = "(endpoints excluded: architecture artifact from last-hidden-state GRU readout)"
+
+    axes[1].hist(top5_idx.flatten(), bins=n_days, range=(0, n_days), color="#ff7f0e", edgecolor="black")
+    axes[1].set_xlabel(time_unit_label)
+    axes[1].set_ylabel("Frequency (pooled top-5 per sample)")
+    axes[1].set_title(f"Most important time steps\n(top-5 per sample, pooled)\n{endpoint_note}", fontsize=9)
+
+    axes[2].hist(bottom5_idx.flatten(), bins=n_days, range=(0, n_days), color="#7f7f7f", edgecolor="black")
+    axes[2].set_xlabel(time_unit_label)
+    axes[2].set_ylabel("Frequency (pooled bottom-5 per sample)")
+    axes[2].set_title(f"Least important time steps\n(bottom-5 per sample, pooled)\n{endpoint_note}", fontsize=9)
+
+    show_and_save(
+        fig,
+        fig_name,
+        f"XAI 4: Channel & Time Importance Stats ({target_name}, n={n_samples})",
+    )
+
+    stats_df = pd.DataFrame({
+        "channel": channel_names,
+        "dominant_count": channel_counts,
+        "dominant_fraction": channel_counts / n_samples,
+    })
+
+    return fig, stats_df, dominant_channel, top5_idx, bottom5_idx
