@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from sir_xai.simulation.dataset import build_sir_tensor_dataset, build_lv_tensor_dataset
 from sir_xai.simulation.lotka_volterra_model import DIM_THETA as LV_DIM_THETA, N_CHANNELS as LV_N_CHANNELS
-from sir_xai.utils.config import PARAM_NAMES, DEVICE
+from sir_xai.utils.config import PARAM_NAMES, DEVICE, set_seed
 
 
 class SIRGRUSummaryNet(nn.Module):
@@ -55,11 +55,12 @@ class TargetWrapper(nn.Module):
         return self.head(self.body(x))[:, self.target_idx:self.target_idx + 1]
 
 
-def train_sir_surrogate(n_sims: int, epochs: int = 60, batch_size: int = 64):
+def train_sir_surrogate(n_sims: int, epochs: int = 60, batch_size: int = 64, seed: int = 42):
     """Trains SIRGRUSummaryNet + linear head to predict log1p(theta) from
     (S, I, R). Returns the trained body/head (not yet wrapped to a single
     target) plus a held-out validation split for attribution."""
-    
+    set_seed(seed)
+
     # BayesFlow'un kapatmış olabileceği autograd'ı sürrogat eğitim için zorunlu olarak açıyoruz
     with torch.enable_grad():
         X, y = build_sir_tensor_dataset(n_sims)
@@ -109,12 +110,13 @@ def train_sir_surrogate(n_sims: int, epochs: int = 60, batch_size: int = 64):
     return body, head, X_val, y_val
 
 
-def train_lv_surrogate(n_sims: int, epochs: int = 60, batch_size: int = 64):
+def train_lv_surrogate(n_sims: int, epochs: int = 60, batch_size: int = 64, seed: int = 42):
     """Trains LVGRUSummaryNet + linear head to predict theta (already in
     [-1, 1], no log1p needed) from the 2-channel observables produced by
     lotka_volterra_model.sample_fn. Returns the trained body/head (not yet
     wrapped to a single target) plus a held-out validation split for
     attribution, exactly like train_sir_surrogate."""
+    set_seed(seed)
 
     with torch.enable_grad():
         X, y = build_lv_tensor_dataset(n_sims)

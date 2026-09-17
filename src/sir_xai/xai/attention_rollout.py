@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 from sir_xai.simulation.dataset import build_sir_tensor_dataset
-from sir_xai.utils.config import CONFIG, PARAM_NAMES, DEVICE
+from sir_xai.utils.config import CONFIG, PARAM_NAMES, DEVICE, set_seed
 from sir_xai.utils.plotting import show_and_save
 
 
@@ -149,7 +149,8 @@ def plot_bertviz_style_connections(
     return fig
 
 
-def _train_transformer(n_sims: int, epochs: int, batch_size: int = 64):
+def _train_transformer(n_sims: int, epochs: int, batch_size: int = 64, seed: int = 42):
+    set_seed(seed)
     X, y = build_sir_tensor_dataset(n_sims)
     n_val = int(0.1 * len(X))
     X_train, X_val = X[:-n_val].to(DEVICE), X[-n_val:].to(DEVICE)

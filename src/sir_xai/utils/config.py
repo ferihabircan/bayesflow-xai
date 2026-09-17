@@ -3,6 +3,7 @@ keras/bayesflow/torch, since CUDA_VISIBLE_DEVICES and KERAS_BACKEND must be
 set before those libraries are imported."""
 
 import os
+import random
 
 # =============================================================
 # GPU & BACKEND SETTINGS
@@ -11,6 +12,7 @@ os.environ.setdefault("CUDA_VISIBLE_DEVICES", "7")
 # Keras backend set to 'torch' for Captum / PyTorch compatibility
 os.environ.setdefault("KERAS_BACKEND", "torch")
 
+import numpy as np  # noqa: E402  (must come after the env vars above)
 import torch  # noqa: E402  (must come after the env vars above)
 from dataclasses import dataclass
 
@@ -25,6 +27,28 @@ def _report_device():
 
 
 DEVICE = _report_device()
+
+
+def set_seed(seed: int = 42) -> None:
+    """Reseeds every RNG this project touches, so a given training/XAI
+    function produces bit-identical results across separate process runs
+    when called with the same seed.
+
+    Covers: python's `random`, numpy's global RNG (used directly by
+    `lotka_volterra_model.sample_fn`), torch/CUDA, and `sir_model.RNG` --
+    a standalone `np.random.Generator` instance that `np.random.seed()`
+    does NOT reach, so it must be reseeded explicitly here.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    # Lazy import to avoid a circular import (sir_model imports CONFIG from
+    # this module at module load time).
+    from sir_xai.simulation import sir_model
+
+    sir_model.RNG = np.random.default_rng(seed)
 
 
 @dataclass(frozen=True)

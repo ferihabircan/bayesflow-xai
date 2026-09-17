@@ -5,10 +5,11 @@ from keras.callbacks import EarlyStopping
 
 from sir_xai.simulation.adapter import build_simulator, build_adapter
 from sir_xai.training.networks import GRUSummaryNetwork
-from sir_xai.utils.config import CONFIG
+from sir_xai.utils.config import CONFIG, set_seed
 
 
-def build_workflow():
+def build_workflow(seed: int = 42):
+    set_seed(seed)
     summary_net = GRUSummaryNetwork()
     inference_net = bf.networks.CouplingFlow(depth=2, transform="spline")
 
@@ -22,7 +23,8 @@ def build_workflow():
     return workflow, summary_net
 
 
-def train_workflow(workflow, use_early_stopping: bool = True):
+def train_workflow(workflow, use_early_stopping: bool = True, seed: int = 42):
+    set_seed(seed)
     training_data = workflow.simulate(CONFIG.n_train_sims)
     validation_data = workflow.simulate(CONFIG.n_val_sims)
 
