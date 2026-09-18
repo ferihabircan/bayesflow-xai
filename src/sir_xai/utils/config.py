@@ -4,6 +4,7 @@ set before those libraries are imported."""
 
 import os
 import random
+import sys
 
 # =============================================================
 # GPU & BACKEND SETTINGS
@@ -35,9 +36,10 @@ def set_seed(seed: int = 42) -> None:
     when called with the same seed.
 
     Covers: python's `random`, numpy's global RNG (used directly by
-    `lotka_volterra_model.sample_fn`), torch/CUDA, and `sir_model.RNG` --
-    a standalone `np.random.Generator` instance that `np.random.seed()`
-    does NOT reach, so it must be reseeded explicitly here.
+    `lotka_volterra_model.sample_fn`), torch/CUDA, and `sir_model.RNG` /
+    `grf_model.rng` -- standalone `np.random.Generator` instances that
+    `np.random.seed()` does NOT reach, so they must be reseeded explicitly
+    here.
     """
     random.seed(seed)
     np.random.seed(seed)
@@ -49,6 +51,19 @@ def set_seed(seed: int = 42) -> None:
     from sir_xai.simulation import sir_model
 
     sir_model.RNG = np.random.default_rng(seed)
+
+    # grf_model / grf_generative_model pull in bayesflow/FyeldGenerator at
+    # module load time, so each is only reseeded if some other code has
+    # already imported it -- this function must not become a hard
+    # dependency on the GRF modules for callers (SIR/LV surrogates,
+    # transformer) that never touch them.
+    grf_model = sys.modules.get("sir_xai.simulation.grf_model")
+    if grf_model is not None:
+        grf_model.rng = np.random.default_rng(seed)
+
+    grf_generative_model = sys.modules.get("sir_xai.simulation.grf_generative_model")
+    if grf_generative_model is not None:
+        grf_generative_model.rng = np.random.default_rng(seed)
 
 
 @dataclass(frozen=True)
