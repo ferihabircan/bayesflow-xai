@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from sir_xai.simulation.sir_model import prior, stationary_SIR
+from xai.simulation.sir_model import prior, stationary_SIR
 
 
 def test_prior_keys():

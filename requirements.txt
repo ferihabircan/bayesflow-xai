@@ -9,4 +9,5 @@ matplotlib
 pandas
 numpy
 FyeldGenerator
+pyyaml
 pytest

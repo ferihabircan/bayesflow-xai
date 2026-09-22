@@ -1,7 +1,7 @@
 [project]
-name = "sir-xai"
+name = "xai"
 version = "0.1.0"
-description = "XAI analysis (UMAP/t-SNE, Integrated Gradients, Attention Rollout) on a BayesFlow SIR-like model"
+description = "Explainable AI (Integrated Gradients, Saliency Maps, Attention Rollout, Masking) for BayesFlow simulation-based inference models: SIR, Lotka-Volterra, and Gaussian Random Field"
 requires-python = ">=3.10"
 dependencies = [
     "bayesflow",
@@ -15,6 +15,7 @@ dependencies = [
     "pandas",
     "numpy",
     "FyeldGenerator",
+    "pyyaml",
 ]
 
 [project.optional-dependencies]

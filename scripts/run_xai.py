@@ -5,17 +5,17 @@ Usage: python scripts/run_xai.py --target lambd
 
 import argparse
 
-from sir_xai.utils.config import CONFIG  # noqa: F401
-from sir_xai.training.workflow import build_workflow, train_workflow
-from sir_xai.xai.latent_space import latent_space_analysis
-from sir_xai.xai.integrated_gradients import (
+from xai.utils.config import CONFIG  # noqa: F401
+from xai.training.workflow import build_workflow, train_workflow
+from xai.methods.latent_space import latent_space_analysis
+from xai.methods.integrated_gradients import (
     integrated_gradients_analysis,
     plot_dot_pixel_saliency_map,
     plot_dot_pixel_saliency_for_all_samples,
     compute_channel_and_time_importance_stats,
 )
-from sir_xai.xai.attention_rollout import attention_rollout_analysis
-from sir_xai.utils.config import PARAM_NAMES
+from xai.methods.attention_rollout import attention_rollout_analysis
+from xai.utils.config import PARAM_NAMES
 
 
 def main(target: str, skip_training: bool = False, sample_index: int = 0,

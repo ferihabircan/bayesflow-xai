@@ -3,17 +3,17 @@
 optionally trains the BasicWorkflow (bf.BasicWorkflow + ConvolutionalNetwork
 summary net), then computes pixel-level Integrated Gradients saliency for
 one target parameter via a separate plain-torch CNN surrogate (see
-xai/grf_xai.py), saved to outputs/figures/.
+methods/grf_xai.py), saved to outputs/figures/.
 
 Usage: python scripts/run_grf_xai.py --target alpha --skip-training
 """
 
 import argparse
 
-from sir_xai.utils.config import CONFIG  # noqa: F401
-from sir_xai.simulation.grf_model import PARAM_NAMES
-from sir_xai.training.grf_workflow import build_grf_workflow, train_grf_workflow
-from sir_xai.xai.grf_xai import grf_pixel_saliency_analysis
+from xai.utils.config import CONFIG  # noqa: F401
+from xai.simulation.grf.grf_model import PARAM_NAMES
+from xai.training.grf_workflow import build_grf_workflow, train_grf_workflow
+from xai.methods.grf_xai import grf_pixel_saliency_analysis
 
 
 def main(

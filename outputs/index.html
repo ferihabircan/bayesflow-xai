@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>xai</title>
+<meta name="description" content="Explainable AI for simulation-based inference: SIR, Lotka-Volterra, and Gaussian Random Field models, with Integrated Gradients, Saliency Maps, Attention Rollout, and Masking/Occlusion." />
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #111111;
+    --muted: #666666;
+    --muted-2: #8a8a8a;
+    --border: #e6e6e6;
+    --card-bg: #fafafa;
+    --code-bg: #111111;
+    --code-fg: #e8e8e8;
+    --accent: #b45309;
+    --accent-fg: #ffffff;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --maxw: 980px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a0a0a;
+      --fg: #f2f2f2;
+      --muted: #a3a3a3;
+      --muted-2: #7a7a7a;
+      --border: #262626;
+      --card-bg: #131313;
+      --code-bg: #000000;
+      --code-fg: #e8e8e8;
+      --accent: #f59e0b;
+      --accent-fg: #111111;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0a0a;
+    --fg: #f2f2f2;
+    --muted: #a3a3a3;
+    --muted-2: #7a7a7a;
+    --border: #262626;
+    --card-bg: #131313;
+    --code-bg: #000000;
+    --code-fg: #e8e8e8;
+    --accent: #f59e0b;
+    --accent-fg: #111111;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  img { max-width: 100%; display: block; border-radius: 6px; border: 1px solid var(--border); }
+
+  code, pre, .mono { font-family: var(--font-mono); }
+
+  /* ---------- nav ---------- */
+  nav.topnav {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topnav-inner {
+    max-width: var(--maxw); margin: 0 auto; padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .brand { font-family: var(--font-mono); font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
+  .brand .dot { color: var(--accent); }
+  .navlinks { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+  .navlinks a {
+    text-decoration: none; font-size: 13.5px; color: var(--muted);
+    font-family: var(--font-mono);
+  }
+  .navlinks a:hover { color: var(--fg); }
+  .navlinks a.gh { display: inline-flex; align-items: center; gap: 6px; color: var(--fg); }
+
+  /* ---------- layout helpers ---------- */
+  section { max-width: var(--maxw); margin: 0 auto; padding: 64px 20px; }
+  section.tight { padding-top: 40px; padding-bottom: 40px; }
+  h2 {
+    font-family: var(--font-mono); font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--muted); margin: 0 0 28px 0;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2::before { content: ""; width: 18px; height: 1px; background: var(--accent); display: inline-block; }
+  h3 { font-size: 17px; margin: 0 0 8px 0; }
+  p { color: var(--muted); margin: 0 0 12px 0; }
+  .section-border { border-top: 1px solid var(--border); }
+
+  /* ---------- hero ---------- */
+  .hero { padding-top: 88px; padding-bottom: 56px; }
+  .hero h1 {
+    font-size: clamp(32px, 5vw, 48px); line-height: 1.1; letter-spacing: -0.03em;
+    margin: 0 0 18px 0;
+  }
+  .hero .lede { font-size: 17px; max-width: 620px; margin-bottom: 28px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 26px 0; }
+  .badge {
+    font-family: var(--font-mono); font-size: 11.5px; border: 1px solid var(--border);
+    border-radius: 4px; padding: 4px 9px; color: var(--muted); display: inline-flex; gap: 6px;
+  }
+  .badge b { color: var(--fg); font-weight: 600; }
+
+  /* ---------- interactive ascii art ---------- */
+  .ascii-hero {
+    margin: 10px 0 30px 0; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card-bg); padding: 20px 10px 14px 10px; overflow: hidden;
+  }
+  .ascii-grid {
+    font-family: var(--font-mono); font-size: clamp(7px, 1.3vw, 12px);
+    line-height: 1.15; letter-spacing: 0; color: var(--fg);
+    user-select: none; cursor: default; width: max-content; margin: 0 auto;
+  }
+  .ascii-row { white-space: pre; }
+  .ascii-row span { display: inline-block; width: 1ch; transition: opacity 70ms linear, color 70ms linear; }
+  .ascii-row span.hot { color: var(--accent); }
+  .ascii-caption {
+    text-align: center; font-family: var(--font-mono); font-size: 11px;
+    color: var(--muted-2); margin: 10px 0 0 0; letter-spacing: 0.04em;
+  }
+
+  /* ---------- code blocks ---------- */
+  .code {
+    background: var(--code-bg); color: var(--code-fg);
+    border-radius: 8px; padding: 16px 18px; font-size: 13px;
+    overflow-x: auto; border: 1px solid var(--border);
+  }
+  .code .c1 { color: #7a8b99; }
+  .code .prompt { color: var(--accent); }
+  .code pre { margin: 0; white-space: pre; }
+
+  /* ---------- steps / lists ---------- */
+  .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+  .steps li {
+    counter-increment: step; position: relative; padding-left: 34px; margin-bottom: 18px;
+  }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border);
+    color: var(--muted); font-family: var(--font-mono); font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------- tabs ---------- */
+  .tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+  .tab-btn {
+    font-family: var(--font-mono); font-size: 12.5px; padding: 7px 14px;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; border-radius: 5px;
+  }
+  .tab-btn[aria-selected="true"] { color: var(--bg); background: var(--fg); border-color: var(--fg); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ---------- cards ---------- */
+  .grid { display: grid; gap: 18px; }
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 860px) {
+    .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; }
+    .navlinks { display: none; }
+  }
+  .card {
+    border: 1px solid var(--border); background: var(--card-bg); border-radius: 10px;
+    padding: 18px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .card .tag {
+    font-family: var(--font-mono); font-size: 10.5px; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .card .targets {
+    font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-2);
+  }
+  .card img { margin-top: 4px; }
+  .card p { font-size: 13.5px; margin: 0; }
+
+  /* ---------- results ---------- */
+  .findings { display: grid; gap: 14px; margin-bottom: 28px; }
+  .finding {
+    border: 1px solid var(--border); border-left: 2px solid var(--accent);
+    padding: 14px 16px; border-radius: 0 8px 8px 0; background: var(--card-bg);
+  }
+  .finding h4 { margin: 0 0 6px 0; font-size: 14px; }
+  .finding p { margin: 0; font-size: 13.5px; }
+  .results-figs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+  @media (max-width: 700px) { .results-figs { grid-template-columns: 1fr; } }
+  figure { margin: 0; }
+  figcaption { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-2); margin-top: 6px; }
+
+  /* ---------- tree ---------- */
+  .tree {
+    font-size: 12.5px; line-height: 1.7;
+  }
+
+  /* ---------- footer ---------- */
+  footer {
+    border-top: 1px solid var(--border); padding: 32px 20px; margin-top: 40px;
+  }
+  .footer-inner {
+    max-width: var(--maxw); margin: 0 auto; display: flex; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; font-size: 12.5px; color: var(--muted-2); font-family: var(--font-mono);
+  }
+  .footer-inner a { color: var(--muted); text-decoration: none; }
+  .footer-inner a:hover { color: var(--fg); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <div class="brand"><span class="dot">&gt;</span>xai</div>
+    <div class="navlinks">
+      <a href="#install">Install</a>
+      <a href="#usage">Usage</a>
+      <a href="#models">Models</a>
+      <a href="#xai-methods">XAI Methods</a>
+      <a href="#results">Results</a>
+      <a href="#extend">Docs</a>
+      <a class="gh" href="https://github.com/ferihabircan/sir_xai_project" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="tag mono" style="font-family:var(--font-mono);font-size:12px;color:var(--accent);letter-spacing:.06em;margin-bottom:14px;">SIMULATION-BASED INFERENCE &times; EXPLAINABLE AI</div>
+  <h1>Explainable AI for BayesFlow<br/>simulation-based inference</h1>
+  <p class="lede">
+    Three simulators (SIR epidemic model, a Lotka-Volterra-style example, and a
+    Gaussian Random Field) trained with BayesFlow, explained with four XAI
+    methods (Integrated Gradients, Saliency Maps, Attention Rollout,
+    Masking/Occlusion) &mdash; wired through a single registry so a new
+    simulator or XAI method is a decorator away, config-driven end to end.
+  </p>
+
+  <div class="ascii-hero" id="asciiHero">
+    <div class="ascii-grid" id="asciiGrid" aria-hidden="true"></div>
+  </div>
+  <p class="ascii-caption">move the pointer to interact &mdash; S (declining) &middot; I (bump) &middot; R (rising)</p>
+
+  <div class="code"><pre><span class="c1"># clone, then from the project root:</span>
+<span class="prompt">$</span> python -m venv .venv &amp;&amp; source .venv/bin/activate
+<span class="prompt">$</span> pip install -e .
+<span class="prompt">$</span> python scripts/run_workflow.py --config configs/workflow_example.yaml</pre></div>
+  <div class="badges">
+    <span class="badge">python <b>&ge;3.10</b></span>
+    <span class="badge">bayesflow <b>+ keras 3</b></span>
+    <span class="badge">torch <b>+ captum</b></span>
+    <span class="badge">simulators <b>3</b></span>
+    <span class="badge">xai methods <b>4</b></span>
+  </div>
+</section>
+
+<section id="install" class="section-border">
+  <h2>Install</h2>
+  <ol class="steps">
+    <li>
+      <p style="color:var(--fg);margin-bottom:8px;">Create and activate a virtual environment</p>
+      <div class="code"><pre><span class="prompt">$</span> python -m venv .venv
+<span class="prompt">$</span> source .venv/bin/activate</pre></div>
+    </li>
+    <li>
+      <p style="color:var(--fg);margin-bottom:8px;">Install the package (editable) and its dependencies</p>
+      <div class="code"><pre><span class="prompt">$</span> pip install -e .
+<span class="c1"># or: pip install -r requirements.txt</span></pre></div>
+    </li>
+    <li>
+      <p style="color:var(--fg);margin-bottom:8px;">Set your GPU / backend (copy the example env file)</p>
+      <div class="code"><pre><span class="prompt">$</span> cp .env.example .env
+<span class="c1"># .env sets KERAS_BACKEND=torch and CUDA_VISIBLE_DEVICES=&lt;your GPU index&gt;
+# note: src/xai/utils/config.py sets a default at import time --
+# check that default matches an idle GPU on a shared machine before running.</span></pre></div>
+    </li>
+  </ol>
+</section>
+
+<section id="usage" class="section-border">
+  <h2>Usage</h2>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn" role="tab" aria-selected="true" data-tab="shell">Shell</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="python">Python API</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="yaml">workflow_example.yaml</button>
+  </div>
+
+  <div class="tab-panel active" data-panel="shell">
+    <div class="code"><pre><span class="c1"># the general, config-driven entry point -- any registered</span>
+<span class="c1"># simulator x summary network x XAI method:</span>
+<span class="prompt">$</span> python scripts/run_workflow.py --config configs/workflow_example.yaml
+
+<span class="c1"># original per-pipeline scripts still work exactly as before:</span>
+<span class="prompt">$</span> python scripts/run_diagnostics.py
+<span class="prompt">$</span> python scripts/run_xai.py --target lambd --stats
+<span class="prompt">$</span> python scripts/run_lv_xai.py --target theta0 --stats
+<span class="prompt">$</span> python scripts/run_grf_xai.py --target alpha</pre></div>
+  </div>
+
+  <div class="tab-panel" data-panel="python">
+    <div class="code"><pre><span class="c1"># registering your own simulator (see xai/registry.py for the full docstring)</span>
+<span class="prompt">from</span> xai.registry <span class="prompt">import</span> register_simulator, SimulatorSpec
+
+<span class="c1">@register_simulator("my_sim", targets=["theta"])</span>
+<span class="prompt">def</span> build_my_sim_spec() -> SimulatorSpec:
+    <span class="prompt">from</span> my_lab.my_dataset <span class="prompt">import</span> build_my_tensor_dataset
+    <span class="prompt">return</span> SimulatorSpec(
+        name=<span class="c1">"my_sim"</span>,
+        param_names=[<span class="c1">"theta"</span>],
+        input_kind=<span class="c1">"timeseries"</span>,          <span class="c1"># or "image"</span>
+        build_tensor_dataset=build_my_tensor_dataset,
+        channel_names=[<span class="c1">"x"</span>],
+        in_channels=1,
+    )
+
+<span class="c1"># then: simulator: my_sim   in your own workflow .yaml</span></pre></div>
+  </div>
+
+  <div class="tab-panel" data-panel="yaml">
+    <div class="code"><pre><span class="c1"># configs/workflow_example.yaml</span>
+simulator: sir              <span class="c1"># sir | lotka_volterra | grf</span>
+summary_network: gru        <span class="c1"># gru | conv | transformer</span>
+inference_network: coupling_flow
+target: lambd                <span class="c1"># must be a registered target for the simulator</span>
+xai_method: integrated_gradients
+<span class="c1"># integrated_gradients | saliency_map | attention_rollout | masking</span></pre></div>
+  </div>
+</section>
+
+<section id="models" class="section-border">
+  <h2>Models</h2>
+  <div class="grid cols-3">
+    <div class="card">
+      <span class="tag">simulator/sir</span>
+      <h3>SIR</h3>
+      <span class="targets">lambd &middot; mu &middot; D &middot; I0 &middot; psi</span>
+      <p>Stationary Susceptible-Infected-Recovered epidemic model from the BayesFlow
+      tutorial: a prior over infection/recovery dynamics, forward-simulated case
+      counts observed through negative-binomial noise.</p>
+      <img src="figures/02_parameter_recovery.png" alt="SIR parameter recovery plot" loading="lazy" />
+    </div>
+    <div class="card">
+      <span class="tag">simulator/lotka_volterra</span>
+      <h3>Lotka-Volterra</h3>
+      <span class="targets">theta0 &middot; theta1 &middot; theta2</span>
+      <p>Despite the name, a theta-parametrized sinusoidal signal with additive
+      Gaussian noise (kept verbatim from the source example) -- a 2-channel
+      timeseries testbed for the same XAI surrogate pipeline as SIR.</p>
+      <img src="figures/xai_lv_04_channel_time_importance_stats.png" alt="Lotka-Volterra channel/time importance stats" loading="lazy" />
+    </div>
+    <div class="card">
+      <span class="tag">simulator/grf</span>
+      <h3>Gaussian Random Field</h3>
+      <span class="targets">log_std &middot; alpha</span>
+      <p>BayesFlow's spatial-data example: a 64&times;64 field generated from a
+      power-law spectrum. Two scenarios -- (log_std, alpha) as inference
+      target, and the field itself generated via a conditional diffusion model.</p>
+      <img src="figures/grf_tutorial/32_06_real_vs_generated_fields.png" alt="GRF real vs generated fields" loading="lazy" />
+    </div>
+  </div>
+</section>
+
+<section id="xai-methods" class="section-border">
+  <h2>XAI Methods</h2>
+  <div class="grid cols-4">
+    <div class="card">
+      <span class="tag">gradient path</span>
+      <h3>Integrated Gradients</h3>
+      <p>Walks a straight-line path from a zero baseline to the real input,
+      accumulating the output's gradient at every step, to attribute the
+      prediction to each input value.</p>
+      <img src="figures/xai_02_integrated_gradients.png" alt="Integrated Gradients channel importance" loading="lazy" />
+    </div>
+    <div class="card">
+      <span class="tag">raw gradient</span>
+      <h3>Saliency Map</h3>
+      <p>The simplest XAI method: the raw gradient of the output with respect
+      to the input, no baseline or path integral -- cheap, but noisier than
+      Integrated Gradients.</p>
+      <img src="figures/workflow_sir_saliency_map_saliency_map.png" alt="Saliency map channel importance" loading="lazy" />
+    </div>
+    <div class="card">
+      <span class="tag">transformer</span>
+      <h3>Attention Rollout</h3>
+      <p>Multiplies a transformer's per-layer attention weights (mixed with a
+      residual/identity term per layer) to trace how information from each
+      time step flows to the output through every layer.</p>
+      <img src="figures/xai_03b_attention_connections.png" alt="Attention rollout BertViz-style connections" loading="lazy" />
+    </div>
+    <div class="card">
+      <span class="tag">new &middot; black-box</span>
+      <h3>Masking / Occlusion</h3>
+      <p>No gradients at all: cover part of the input (a time step, or an
+      image patch) with a zero baseline and measure how much the prediction
+      moves. Works even against models Captum can't differentiate through.</p>
+      <img src="figures/workflow_sir_masking_masking_time_importance.png" alt="Masking/occlusion time importance" loading="lazy" />
+    </div>
+  </div>
+</section>
+
+<section id="results" class="section-border">
+  <h2>Results</h2>
+  <div class="findings">
+    <div class="finding">
+      <h4>GRU summary networks over-weight sequence endpoints</h4>
+      <p>Every GRU surrogate here reads out only the final hidden state, so the
+      last time step reaches the output through a single update while earlier
+      steps are diluted through many compounded ones -- endpoints dominate
+      |IG attribution| almost by construction. Channel/time importance stats
+      exclude both endpoints from the reported "important time steps" for
+      this reason (see <code>methods/integrated_gradients.py</code>).</p>
+    </div>
+    <div class="finding">
+      <h4>Attention rollout and Integrated Gradients agree on SIR</h4>
+      <p>The transformer's rolled-out attention concentrates on the outbreak's
+      rising/peak region, the same window Integrated Gradients ranks highest
+      for the Infected (I) channel -- two independent methods converging on
+      the same explanation is a useful sanity check for either one alone.</p>
+    </div>
+    <div class="finding">
+      <h4>Masking is gradient-free but far more expensive</h4>
+      <p>Occlusion needs one forward pass per masked time step/patch instead
+      of one backward pass total, so it scales with input size -- worth it
+      specifically because it needs no autograd support from the model,
+      unlike the other three methods here.</p>
+    </div>
+  </div>
+  <div class="results-figs">
+    <figure>
+      <img src="figures/xai_01_latent_space.png" alt="UMAP/t-SNE latent space colored by lambd" loading="lazy" />
+      <figcaption>SIR summary-network latent space (UMAP/t-SNE), colored by lambd</figcaption>
+    </figure>
+    <figure>
+      <img src="figures/03_sbc_calibration.png" alt="SBC calibration histogram" loading="lazy" />
+      <figcaption>Simulation-based calibration check for the trained posterior</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="extend" class="section-border">
+  <h2>Docs / Extend</h2>
+
+  <h3>Add your own simulator or XAI method</h3>
+  <p>Everything selectable from a config lives in one registry
+  (<code>src/xai/registry.py</code>) populated by
+  <code>src/xai/registrations.py</code>. Registering something new is a
+  decorator, in your own module:</p>
+  <div class="code"><pre><span class="c1"># my_lab/my_xai_method.py</span>
+<span class="prompt">from</span> xai.registry <span class="prompt">import</span> register_xai_method
+
+<span class="c1">@register_xai_method("my_method")</span>
+<span class="prompt">def</span> my_method(spec, body, head, X_val, y_val, target_idx, target_name, fig_prefix, **kwargs):
+    <span class="c1"># spec: SimulatorSpec (input_kind, channel_names / field_shape, ...)
+    # body/head: trained surrogate -- head(body(x)) -> target predictions
+    # return whatever you plot; xai.utils.plotting.show_and_save()
+    # saves figures the same way every other method does.</span>
+    ...</pre></div>
+  <p>Import your module once (e.g. at the top of your own copy of
+  <code>scripts/run_workflow.py</code>, or add it to
+  <code>registrations.py</code>) so the decorator runs before the config
+  lookup -- then reference it by name from any workflow <code>.yaml</code>.</p>
+
+  <h3 style="margin-top:28px;">Project layout</h3>
+  <div class="code tree"><pre>src/xai/
+  registry.py            <span class="c1"># SIMULATORS / SUMMARY_NETWORKS / INFERENCE_NETWORKS / XAI_METHODS</span>
+  registrations.py        <span class="c1"># built-in registrations (import this to populate the registry)</span>
+  simulation/
+    sir/                   <span class="c1"># sir_model.py, adapter.py + README.md</span>
+    lotka_volterra/         <span class="c1"># lotka_volterra_model.py + README.md</span>
+    grf/                    <span class="c1"># grf_model.py, grf_generative_model.py + README.md</span>
+    dataset.py              <span class="c1"># shared tensor-dataset builders</span>
+  training/                <span class="c1"># BayesFlow BasicWorkflow build/train</span>
+  diagnostics/             <span class="c1"># loss / recovery / SBC calibration plots</span>
+  methods/
+    integrated_gradients.py, saliency_map.py,
+    attention_rollout.py, masking.py
+    generic_surrogate.py    <span class="c1"># registry-driven surrogate net + trainer</span>
+  utils/                   <span class="c1"># CONFIG, DEVICE, show_and_save()</span>
+scripts/
+  run_workflow.py          <span class="c1"># config-driven entry point</span>
+  run_xai.py, run_lv_xai.py, run_grf_xai.py, ...
+configs/
+  workflow_example.yaml
+outputs/                  <span class="c1"># figures/, models/, logs/ (gitignored)</span></pre></div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span>Feriha Bircan &middot; <a href="mailto:ferihabircan4@gmail.com">ferihabircan4@gmail.com</a></span>
+    <span><a href="https://github.com/ferihabircan/sir_xai_project" target="_blank" rel="noopener">github.com/ferihabircan/sir_xai_project</a></span>
+    <span>Research internship project &middot; BayesFlow simulation-based inference + explainability</span>
+  </div>
+</footer>
+
+<script>
+  // ---------- interactive SIR-curve ASCII art (hero) ----------
+  (function () {
+    var COLS = 52, ROWS = 15;
+    var grid = document.getElementById('asciiGrid');
+    var heroAscii = document.getElementById('asciiHero');
+    if (!grid || !heroAscii) return;
+
+    var RAMP = ' .:-=+*#%@';
+
+    // S declines, R rises later, I is whatever's left in between --
+    // a smooth stand-in for a real SIR trajectory's silhouette.
+    function S(t) { return 1 / (1 + Math.exp((t - 0.35) * 12)); }
+    function R(t) { return 1 / (1 + Math.exp(-(t - 0.55) * 10)); }
+    function I(t) { return Math.max(0, 1 - S(t) - R(t)); }
+
+    var baseLevel = [];
+    for (var r = 0; r < ROWS; r++) baseLevel.push(new Array(COLS).fill(0));
+
+    [S, I, R].forEach(function (fn) {
+      for (var c = 0; c < COLS; c++) {
+        var t = c / (COLS - 1);
+        var row = Math.round((1 - fn(t)) * (ROWS - 1));
+        for (var dr = -1; dr <= 1; dr++) {
+          var rr = row + dr;
+          if (rr < 0 || rr >= ROWS) continue;
+          var lvl = dr === 0 ? 4 : 2;
+          if (baseLevel[rr][c] < lvl) baseLevel[rr][c] = lvl;
+        }
+      }
+    });
+
+    function baseOpacity(lvl) { return lvl === 0 ? 0.06 : 0.22 + lvl * 0.09; }
+
+    var spans = [];
+    for (var r = 0; r < ROWS; r++) {
+      var rowDiv = document.createElement('div');
+      rowDiv.className = 'ascii-row';
+      var rowSpans = [];
+      for (var c = 0; c < COLS; c++) {
+        var span = document.createElement('span');
+        var lvl = baseLevel[r][c];
+        span.textContent = RAMP[lvl];
+        span.style.opacity = baseOpacity(lvl);
+        rowDiv.appendChild(span);
+        rowSpans.push(span);
+      }
+      grid.appendChild(rowDiv);
+      spans.push(rowSpans);
+    }
+
+    var metrics = { left: 0, top: 0, cw: 1, ch: 1 };
+    function measure() {
+      var rect = grid.getBoundingClientRect();
+      metrics.left = rect.left;
+      metrics.top = rect.top;
+      metrics.cw = rect.width / COLS;
+      metrics.ch = rect.height / ROWS;
+    }
+
+    var RADIUS = 120; // px, mouse influence radius
+    var lastRun = 0;
+    var THROTTLE_MS = 45; // ~22 updates/sec cap, not every mousemove
+
+    function updateFromPointer(mx, my) {
+      measure();
+      for (var r = 0; r < ROWS; r++) {
+        for (var c = 0; c < COLS; c++) {
+          var cx = metrics.left + (c + 0.5) * metrics.cw;
+          var cy = metrics.top + (r + 0.5) * metrics.ch;
+          var dx = mx - cx, dy = my - cy;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          var intensity = Math.max(0, 1 - dist / RADIUS);
+          var lvl = baseLevel[r][c];
+          var span = spans[r][c];
+          if (intensity <= 0.02) {
+            span.textContent = RAMP[lvl];
+            span.style.opacity = baseOpacity(lvl);
+            span.className = '';
+            continue;
+          }
+          var boosted = Math.min(9, lvl + Math.round(intensity * 6));
+          span.textContent = RAMP[boosted];
+          span.style.opacity = Math.min(1, baseOpacity(lvl) + intensity * 0.85);
+          span.className = intensity > 0.35 ? 'hot' : '';
+        }
+      }
+    }
+
+    function resetGrid() {
+      for (var r = 0; r < ROWS; r++) {
+        for (var c = 0; c < COLS; c++) {
+          var lvl = baseLevel[r][c];
+          spans[r][c].textContent = RAMP[lvl];
+          spans[r][c].style.opacity = baseOpacity(lvl);
+          spans[r][c].className = '';
+        }
+      }
+    }
+
+    heroAscii.addEventListener('mousemove', function (e) {
+      var now = performance.now();
+      if (now - lastRun < THROTTLE_MS) return;
+      lastRun = now;
+      updateFromPointer(e.clientX, e.clientY);
+    });
+    heroAscii.addEventListener('mouseleave', resetGrid);
+  })();
+
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var group = btn.closest('.tabs');
+      group.querySelectorAll('.tab-btn').forEach(function (b) { b.setAttribute('aria-selected', 'false'); });
+      btn.setAttribute('aria-selected', 'true');
+      var panels = group.nextElementSibling ? null : null;
+      var container = group.parentElement;
+      container.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+      container.querySelector('.tab-panel[data-panel="' + btn.dataset.tab + '"]').classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

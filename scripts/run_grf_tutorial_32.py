@@ -27,15 +27,15 @@ import numpy as np
 import bayesflow as bf
 from FyeldGenerator import generate_field
 
-from sir_xai.utils.config import CONFIG
-from sir_xai.simulation.grf_model import generate_power_spectrum, FIELD_SHAPE
-from sir_xai.simulation.grf_model import distribution as original_distribution
-from sir_xai.simulation.grf_model import build_grf_simulator
-from sir_xai.simulation.grf_generative_model import (
+from xai.utils.config import CONFIG
+from xai.simulation.grf.grf_model import generate_power_spectrum, FIELD_SHAPE
+from xai.simulation.grf.grf_model import distribution as original_distribution
+from xai.simulation.grf.grf_model import build_grf_simulator
+from xai.simulation.grf.grf_generative_model import (
     distribution as unit_length_distribution,
     build_grf_generative_simulator,
 )
-from sir_xai.training.grf_diffusion_workflow import (
+from xai.training.grf_diffusion_workflow import (
     build_grf_diffusion_workflow,
     train_grf_diffusion_workflow,
 )

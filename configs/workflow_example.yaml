@@ -1,0 +1,38 @@
+# Config-driven workflow: pick a simulator, a summary network, an
+# inference network, the parameter you want explained, and an XAI method
+# -- scripts/run_workflow.py reads this file, looks each name up in the
+# xai.registry, and runs the pipeline end to end.
+#
+# Valid names come from xai.registrations (import it and inspect
+# xai.registry.SIMULATORS / SUMMARY_NETWORKS / INFERENCE_NETWORKS /
+# XAI_METHODS to see what's currently registered, including anything you
+# add yourself -- see xai/registry.py for how to register a new one).
+
+# 1) HANGI SIMULASYON/MODEL?
+#    Options: sir | lotka_volterra | grf
+simulator: sir
+
+# 2) SUMMARY NETWORK TIPI
+#    Options: gru (timeseries) | conv (image) | transformer (timeseries)
+summary_network: gru
+
+# 3) INFERENCE NETWORK TIPI
+#    Options: coupling_flow
+inference_network: coupling_flow
+
+# 4) HEDEF PARAMETRE
+#    Must be one of the target parameters registered for the chosen
+#    simulator (sir: lambd/mu/D/I0/psi, lotka_volterra: theta0/theta1/theta2,
+#    grf: log_std/alpha). An invalid target here prints the valid list.
+target: lambd
+
+# 5) XAI YONTEMI
+#    Options: integrated_gradients | saliency_map | attention_rollout | masking
+#    (attention_rollout requires summary_network: transformer)
+xai_method: integrated_gradients
+
+# --- optional overrides (sensible defaults if omitted) ---
+n_sims: 2000          # simulations used to build the surrogate's training set
+epochs: 40            # surrogate training epochs
+batch_size: 64
+seed: 42

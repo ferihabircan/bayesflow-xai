@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Runs XAI Part 4 (channel & time importance stats) against the
 Lotka-Volterra-example surrogate (see simulation/lotka_volterra_model.py
-and xai/surrogate_models.py:LVGRUSummaryNet). Parallel to
+and methods/surrogate_models.py:LVGRUSummaryNet). Parallel to
 scripts/run_xai.py --stats, but only that part: the LV example here has no
 BasicWorkflow/latent-space/attention-rollout counterpart, just the
 standalone GRU surrogate + Integrated Gradients pipeline.
@@ -11,10 +11,10 @@ Usage: python scripts/run_lv_xai.py --target theta0 --stats --n-stats-samples 20
 
 import argparse
 
-from sir_xai.utils.config import CONFIG  # noqa: F401
-from sir_xai.simulation.lotka_volterra_model import PARAM_NAMES, CHANNEL_NAMES
-from sir_xai.xai.surrogate_models import train_lv_surrogate
-from sir_xai.xai.integrated_gradients import compute_channel_and_time_importance_stats
+from xai.utils.config import CONFIG  # noqa: F401
+from xai.simulation.lotka_volterra.lotka_volterra_model import PARAM_NAMES, CHANNEL_NAMES
+from xai.methods.surrogate_models import train_lv_surrogate
+from xai.methods.integrated_gradients import compute_channel_and_time_importance_stats
 
 
 def main(target: str, run_stats: bool = False, n_stats_samples: int = 200, n_surrogate_sims: int = 6000):

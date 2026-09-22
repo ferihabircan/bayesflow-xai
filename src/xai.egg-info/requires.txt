@@ -1,0 +1,17 @@
+bayesflow
+keras>=3
+torch
+captum
+umap-learn
+scikit-learn
+scipy
+matplotlib
+pandas
+numpy
+FyeldGenerator
+pyyaml
+
+[dev]
+pytest
+black
+ruff

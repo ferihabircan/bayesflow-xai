@@ -4,15 +4,15 @@ on the best-recovered parameter (lambd), each figure in its own window."""
 
 import matplotlib.pyplot as plt
 
-from sir_xai.utils.config import CONFIG  # noqa: F401
-from sir_xai.training.workflow import build_workflow, train_workflow
-from sir_xai.diagnostics.plots import run_all_diagnostics
-from sir_xai.xai.latent_space import latent_space_analysis
-from sir_xai.xai.integrated_gradients import (
+from xai.utils.config import CONFIG  # noqa: F401
+from xai.training.workflow import build_workflow, train_workflow
+from xai.diagnostics.plots import run_all_diagnostics
+from xai.methods.latent_space import latent_space_analysis
+from xai.methods.integrated_gradients import (
     integrated_gradients_analysis,
     plot_dot_pixel_saliency_map,
 )
-from sir_xai.xai.attention_rollout import attention_rollout_analysis
+from xai.methods.attention_rollout import attention_rollout_analysis
 
 
 def main():

@@ -1,0 +1,21 @@
+Metadata-Version: 2.4
+Name: xai
+Version: 0.1.0
+Summary: Explainable AI (Integrated Gradients, Saliency Maps, Attention Rollout, Masking) for BayesFlow simulation-based inference models: SIR, Lotka-Volterra, and Gaussian Random Field
+Requires-Python: >=3.10
+Requires-Dist: bayesflow
+Requires-Dist: keras>=3
+Requires-Dist: torch
+Requires-Dist: captum
+Requires-Dist: umap-learn
+Requires-Dist: scikit-learn
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: FyeldGenerator
+Requires-Dist: pyyaml
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: ruff; extra == "dev"

@@ -1,42 +1,56 @@
-# sir-xai
+# xai
 
-XAI analysis for a BayesFlow SIR-like posterior estimation model:
-BayesFlow health diagnostics (loss, parameter recovery, SBC calibration)
-plus three XAI methods (latent-space UMAP/t-SNE, Integrated Gradients via
-Captum, attention rollout on a transformer summary net).
+Explainable AI for BayesFlow simulation-based inference. Three simulators
+(SIR epidemic model, a Lotka-Volterra-style example, Gaussian Random
+Field) trained with BayesFlow, explained with four XAI methods
+(Integrated Gradients, Saliency Maps, Attention Rollout,
+Masking/Occlusion), all wired through one plugin registry so a new
+simulator or XAI method is a decorator away.
 
-## Structure
+Full docs (install/usage/models/XAI methods/results, with figures): open
+[`outputs/index.html`](outputs/index.html) in a browser.
 
-    src/sir_xai/
-      simulation/   prior, ODE simulator, adapter        (no ML deps)
-      training/     BasicWorkflow build/train              (bayesflow, keras)
-      diagnostics/  loss / recovery / calibration plots     (bayesflow.diagnostics)
-      xai/          latent space, integrated gradients,      (torch, captum, umap)
-                    attention rollout (+ surrogate nets)
-      utils/        shared plotting/config helpers
-    scripts/        thin CLI entry points, one per pipeline stage
-    tests/          unit tests per module
-    configs/        run configuration (yaml)
-    outputs/        figures / trained models / logs (gitignored)
+## Components
 
-## Setup
+| folder | what it does |
+|---|---|
+| `src/xai/registry.py` + `registrations.py` | plugin registry: `SIMULATORS`, `SUMMARY_NETWORKS`, `INFERENCE_NETWORKS`, `XAI_METHODS`, all selectable by name |
+| `src/xai/simulation/` | 3 simulator subpackages (`sir/`, `lotka_volterra/`, `grf/`) + shared tensor-dataset builders |
+| `src/xai/training/` | BayesFlow `BasicWorkflow` build/train (posterior inference path) |
+| `src/xai/diagnostics/` | BayesFlow health-check plots: loss, parameter recovery, SBC calibration |
+| `src/xai/methods/` | the 4 XAI methods + their surrogate models (per-simulator and registry-generic) |
+| `src/xai/utils/` | `CONFIG`, `DEVICE`, `set_seed()`, `show_and_save()` |
+| `scripts/` | CLI entry points -- `run_workflow.py` is the general one |
+| `configs/` | `workflow_example.yaml` drives `run_workflow.py` |
+| `tests/` | unit tests, one file per module |
+| `outputs/` | figures / models / logs (gitignored) + the docs page |
 
-    python -m venv .venv && source .venv/bin/activate
-    pip install -r requirements.txt
-    cp .env.example .env   # sets KERAS_BACKEND=torch and CUDA_VISIBLE_DEVICES=7
+Each folder above has its own short README with more detail.
 
-`src/sir_xai/utils/config.py` sets `CUDA_VISIBLE_DEVICES` and
-`KERAS_BACKEND=torch` at import time (before torch/keras/bayesflow load),
-picks `DEVICE = cuda` if available else `cpu`, and prints which GPU is
-active. Every training loop (`training/workflow.py`, `xai/surrogate_models.py`,
-`xai/attention_rollout.py`) moves its model and tensors to `DEVICE`. To pin a
-different GPU, change `CUDA_VISIBLE_DEVICES` in `.env` before running.
+## Installation
 
-## Run
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e .                    # or: pip install -r requirements.txt
+cp .env.example .env                # sets KERAS_BACKEND, CUDA_VISIBLE_DEVICES
+```
 
-    python scripts/run_diagnostics.py       # train workflow + 3 BayesFlow diagnostic plots
-    python scripts/run_xai.py --target lambd # latent space + IG + attention rollout
-    python scripts/run_all.py                # both, in sequence
+`src/xai/utils/config.py` sets `CUDA_VISIBLE_DEVICES`/`KERAS_BACKEND`
+and picks `DEVICE` at import time -- check its default GPU index matches
+an idle GPU before running on a shared machine (this repo's `.env` isn't
+auto-loaded by any code here; the default lives directly in `config.py`).
 
-Each script writes figures to `outputs/figures/` and prints stats to stdout
-(and `outputs/logs/`).
+## Choose a workflow
+
+| I want to... | run |
+|---|---|
+| Try any simulator x XAI method combination | `python scripts/run_workflow.py --config configs/workflow_example.yaml` |
+| Train the SIR posterior + see BayesFlow diagnostics | `python scripts/run_diagnostics.py` |
+| SIR: latent space + Integrated Gradients + Attention Rollout | `python scripts/run_xai.py --target lambd` |
+| Lotka-Volterra: channel/time importance stats | `python scripts/run_lv_xai.py --target theta0 --stats` |
+| GRF: pixel-level Integrated Gradients | `python scripts/run_grf_xai.py --target alpha` |
+| Everything for SIR in one run | `python scripts/run_all.py` |
+| Add your own simulator / XAI method | see `src/xai/registry.py`'s docstring, or the "Docs / Extend" section of `outputs/index.html` |
+
+Every script writes figures to `outputs/figures/` and prints stats to
+stdout.
