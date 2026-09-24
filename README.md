@@ -54,3 +54,54 @@ auto-loaded by any code here; the default lives directly in `config.py`).
 
 Every script writes figures to `outputs/figures/` and prints stats to
 stdout.
+
+## Performance
+
+Wall-clock times actually measured on this project's hardware (1x NVIDIA
+RTX 2080 Ti) -- not estimates. The BasicWorkflow rows use BayesFlow's own
+`Training completed in ...` log line; the Lotka-Volterra row is the whole
+script's wall-clock time (`/usr/bin/time`).
+
+| pipeline | hardware | measured time |
+|---|---|---|
+| SIR `BasicWorkflow` training (100 epochs, 6000 sims) | 1x RTX 2080 Ti | 8.87 min |
+| GRF parameter-inference training (`BasicWorkflow`, 20 epochs) | 1x RTX 2080 Ti | 44.42 min |
+| GRF diffusion model training (`ResidualUViT`, 20 epochs) | 1x RTX 2080 Ti | 1.48 hours (~89 min) |
+| Lotka-Volterra channel/time importance stats (200 samples) | 1x RTX 2080 Ti | 24.5 sec |
+
+Sources: `outputs/run_grf_tutorial_31.log` and `_32.log` for the two GRF
+rows; SIR and Lotka-Volterra timed directly for this table by running
+`scripts/run_diagnostics.py` and `scripts/run_lv_xai.py --target theta0
+--stats` end to end.
+
+## Outputs
+
+`outputs/figures/` file names encode which script produced them:
+
+| pattern | produced by |
+|---|---|
+| `workflow_<simulator>_<xai_method>_*.png` | registry-driven runs: `scripts/run_workflow.py --config ...` |
+| `xai_NN_*.png` / `xai_lv_NN_*.png` | the original per-pipeline scripts (`run_xai.py`, `run_lv_xai.py`) that predate the registry |
+| `grf_tutorial/NN_*.png` | the BayesFlow GRF tutorial (sections 3.1/3.2), reproduced verbatim |
+| `NN_*.png` at the root (`01_loss_trajectory.png`, ...) | BayesFlow diagnostics, `run_diagnostics.py` |
+| `saliency_samples/sample_NNN.png` | one Integrated Gradients plot per validation sample, `run_xai.py` |
+
+`outputs/models/` holds saved network weights (currently just
+`transformer_summary_net.pt`). `outputs/logs/` is where stdout from long
+runs is meant to be captured, though in practice most of this repo's own
+logs were saved as `outputs/*.log` (redirected `nohup` output) rather
+than inside that subfolder.
+
+## License & Citation
+
+MIT licensed -- see [`LICENSE`](LICENSE).
+
+This started as a research internship project. If it's useful to you, a
+mention is appreciated but not required:
+
+```
+Feriha Bircan, "xai: Explainable AI for BayesFlow simulation-based inference" (2026).
+https://github.com/ferihabircan/sir_xai_project
+```
+
+Questions / contact: ferihabircan4@gmail.com
