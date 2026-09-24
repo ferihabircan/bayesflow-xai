@@ -314,7 +314,7 @@
       <a href="#xai-methods">XAI Methods</a>
       <a href="#results">Results</a>
       <a href="#extend">Docs</a>
-      <a class="gh" href="https://github.com/ferihabircan/sir_xai_project" target="_blank" rel="noopener">
+      <a class="gh" href="https://github.com/ferihabircan/bayesflow-xai" target="_blank" rel="noopener">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
         GitHub
       </a>
@@ -461,7 +461,7 @@ xai_method: integrated_gradients
   <div class="grid cols-3">
     <div class="card">
       <span class="tag">simulator/sir</span>
-      <h3><a href="https://github.com/ferihabircan/sir_xai_project/tree/main/src/xai/simulation/sir" target="_blank" rel="noopener">SIR</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/tree/main/src/xai/simulation/sir" target="_blank" rel="noopener">SIR</a></h3>
       <span class="targets">lambd &middot; mu &middot; D &middot; I0 &middot; psi</span>
       <p>Stationary Susceptible-Infected-Recovered epidemic model from the BayesFlow
       tutorial: a prior over infection/recovery dynamics, forward-simulated case
@@ -470,7 +470,7 @@ xai_method: integrated_gradients
     </div>
     <div class="card">
       <span class="tag">simulator/lotka_volterra</span>
-      <h3><a href="https://github.com/ferihabircan/sir_xai_project/tree/main/src/xai/simulation/lotka_volterra" target="_blank" rel="noopener">Lotka-Volterra</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/tree/main/src/xai/simulation/lotka_volterra" target="_blank" rel="noopener">Lotka-Volterra</a></h3>
       <span class="targets">theta0 &middot; theta1 &middot; theta2</span>
       <p>Despite the name, a theta-parametrized sinusoidal signal with additive
       Gaussian noise (kept verbatim from the source example) -- a 2-channel
@@ -479,7 +479,7 @@ xai_method: integrated_gradients
     </div>
     <div class="card">
       <span class="tag">simulator/grf</span>
-      <h3><a href="https://github.com/ferihabircan/sir_xai_project/tree/main/src/xai/simulation/grf" target="_blank" rel="noopener">Gaussian Random Field</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/tree/main/src/xai/simulation/grf" target="_blank" rel="noopener">Gaussian Random Field</a></h3>
       <span class="targets">log_std &middot; alpha</span>
       <p>BayesFlow's spatial-data example: a 64&times;64 field generated from a
       power-law spectrum. Two scenarios -- (log_std, alpha) as inference
@@ -494,7 +494,7 @@ xai_method: integrated_gradients
   <div class="grid cols-4">
     <div class="card">
       <span class="tag">gradient path</span>
-      <h3><a href="https://github.com/ferihabircan/sir_xai_project/blob/main/src/xai/methods/integrated_gradients.py" target="_blank" rel="noopener">Integrated Gradients</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/xai/methods/integrated_gradients.py" target="_blank" rel="noopener">Integrated Gradients</a></h3>
       <p>Walks a straight-line path from a zero baseline to the real input,
       accumulating the output's gradient at every step, to attribute the
       prediction to each input value.</p>
@@ -502,7 +502,7 @@ xai_method: integrated_gradients
     </div>
     <div class="card">
       <span class="tag">raw gradient</span>
-      <h3><a href="https://github.com/ferihabircan/sir_xai_project/blob/main/src/xai/methods/saliency_map.py" target="_blank" rel="noopener">Saliency Map</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/xai/methods/saliency_map.py" target="_blank" rel="noopener">Saliency Map</a></h3>
       <p>The simplest XAI method: the raw gradient of the output with respect
       to the input, no baseline or path integral -- cheap, but noisier than
       Integrated Gradients.</p>
@@ -510,7 +510,7 @@ xai_method: integrated_gradients
     </div>
     <div class="card">
       <span class="tag">transformer</span>
-      <h3><a href="https://github.com/ferihabircan/sir_xai_project/blob/main/src/xai/methods/attention_rollout.py" target="_blank" rel="noopener">Attention Rollout</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/xai/methods/attention_rollout.py" target="_blank" rel="noopener">Attention Rollout</a></h3>
       <p>Multiplies a transformer's per-layer attention weights (mixed with a
       residual/identity term per layer) to trace how information from each
       time step flows to the output through every layer.</p>
@@ -518,7 +518,7 @@ xai_method: integrated_gradients
     </div>
     <div class="card">
       <span class="tag">new &middot; black-box</span>
-      <h3><a href="https://github.com/ferihabircan/sir_xai_project/blob/main/src/xai/methods/masking.py" target="_blank" rel="noopener">Masking / Occlusion</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/xai/methods/masking.py" target="_blank" rel="noopener">Masking / Occlusion</a></h3>
       <p>No gradients at all: cover part of the input (a time step, or an
       image patch) with a zero baseline and measure how much the prediction
       moves. Works even against models Captum can't differentiate through.</p>
@@ -616,7 +616,7 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
 <footer>
   <div class="footer-inner">
     <span>Feriha Bircan &middot; <a href="mailto:ferihabircan4@gmail.com">ferihabircan4@gmail.com</a></span>
-    <span><a href="https://github.com/ferihabircan/sir_xai_project" target="_blank" rel="noopener">github.com/ferihabircan/sir_xai_project</a></span>
+    <span><a href="https://github.com/ferihabircan/bayesflow-xai" target="_blank" rel="noopener">github.com/ferihabircan/bayesflow-xai</a></span>
     <span>Research internship project &middot; BayesFlow simulation-based inference + explainability</span>
   </div>
 </footer>

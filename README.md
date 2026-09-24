@@ -101,7 +101,7 @@ mention is appreciated but not required:
 
 ```
 Feriha Bircan, "xai: Explainable AI for BayesFlow simulation-based inference" (2026).
-https://github.com/ferihabircan/sir_xai_project
+https://github.com/ferihabircan/bayesflow-xai
 ```
 
 Questions / contact: ferihabircan4@gmail.com
