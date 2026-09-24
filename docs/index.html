@@ -644,7 +644,7 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
   // + FyeldGenerator.generate_field: complex Gaussian noise in Fourier space,
   // amplitude-scaled by k^(-alpha/2), inverse 2D-FFT'd, real part taken as the field.
   (function () {
-    var N = 32;          // internal field resolution (power of 2, for the FFT)
+    var N = 64;           // internal field resolution -- matches grf_model.py's FIELD_SHAPE
     var COLS = 60, ROWS = 24; // displayed ASCII grid size
     var RAMP = ' .:-=+*#%@';
 
@@ -722,34 +722,57 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
         for (var j2 = 0; j2 < N; j2++) {
           var fy = j2 <= N / 2 ? j2 : j2 - N;
           var k = Math.sqrt(fx * fx + fy * fy);
-          var amp = k === 0 ? 0 : Math.pow(k, -alpha / 2);
+          var amp = k === 0 ? 0 : Math.pow(k, -alpha / 2); // matches grf_model.py: power_spectrum(k) = k^-alpha * scale^2, amplitude = sqrt(power)
           re[i2][j2] *= amp;
           im[i2][j2] *= amp;
         }
       }
-      var field = ifft2d(re, im, N);
-      var min = Infinity, max = -Infinity;
-      for (var a = 0; a < N; a++) for (var b = 0; b < N; b++) {
-        if (field[a][b] < min) min = field[a][b];
-        if (field[a][b] > max) max = field[a][b];
+      return ifft2d(re, im, N); // raw field, un-normalized -- see downsampleAndNormalize
+    }
+
+    // Area-average NxN down to the ROWSxCOLS display grid (instead of
+    // nearest-neighbor point sampling), so single-pixel FFT noise gets
+    // averaged out the way a continuous colormap hides it via color
+    // interpolation -- then percentile-clip (not raw min/max) before the
+    // 10-level RAMP quantization, so a couple of extreme pixels can't
+    // compress the rest of the field into 1-2 characters.
+    function downsampleAndNormalize(field) {
+      var cellR = N / ROWS, cellC = N / COLS;
+      var out = [], vals = [];
+      for (var r = 0; r < ROWS; r++) {
+        var r0 = Math.floor(r * cellR), r1 = Math.max(r0 + 1, Math.floor((r + 1) * cellR));
+        var row = new Float64Array(COLS);
+        for (var c = 0; c < COLS; c++) {
+          var c0 = Math.floor(c * cellC), c1 = Math.max(c0 + 1, Math.floor((c + 1) * cellC));
+          var sum = 0, cnt = 0;
+          for (var rr = r0; rr < r1 && rr < N; rr++) {
+            for (var cc = c0; cc < c1 && cc < N; cc++) { sum += field[rr][cc]; cnt++; }
+          }
+          var v = sum / cnt;
+          row[c] = v;
+          vals.push(v);
+        }
+        out.push(row);
       }
-      var norm = [];
-      for (var a2 = 0; a2 < N; a2++) {
-        var row = new Float64Array(N);
-        for (var b2 = 0; b2 < N; b2++) row[b2] = (field[a2][b2] - min) / (max - min + 1e-12);
-        norm.push(row);
+      vals.sort(function (a, b) { return a - b; });
+      var lo = vals[Math.floor(vals.length * 0.02)];
+      var hi = vals[Math.ceil(vals.length * 0.98) - 1];
+      if (hi <= lo) hi = lo + 1e-9;
+      for (var r2 = 0; r2 < ROWS; r2++) {
+        for (var c2 = 0; c2 < COLS; c2++) {
+          out[r2][c2] = Math.max(0, Math.min(1, (out[r2][c2] - lo) / (hi - lo)));
+        }
       }
-      return norm;
+      return out;
     }
 
     function renderFieldToLayer(layer, field) {
+      var display = downsampleAndNormalize(field);
       var frag = document.createDocumentFragment();
       for (var r = 0; r < ROWS; r++) {
-        var fr = Math.min(N - 1, Math.floor(r / ROWS * N));
         var line = '';
         for (var c = 0; c < COLS; c++) {
-          var fc = Math.min(N - 1, Math.floor(c / COLS * N));
-          var lvl = Math.min(RAMP.length - 1, Math.floor(field[fr][fc] * RAMP.length));
+          var lvl = Math.min(RAMP.length - 1, Math.floor(display[r][c] * RAMP.length));
           line += RAMP[lvl];
         }
         var rowDiv = document.createElement('div');
