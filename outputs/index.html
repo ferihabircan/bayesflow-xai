@@ -115,22 +115,20 @@
   }
   .badge b { color: var(--fg); font-weight: 600; }
 
-  /* ---------- hero ASCII GRF field ---------- */
+  /* ---------- hero GRF field canvas ---------- */
   .ascii-hero {
     margin: 10px 0 14px 0; border: 1px solid var(--border); border-radius: 10px;
-    background: var(--card-bg); padding: 20px 10px 16px 10px; overflow: hidden;
+    background: var(--card-bg); padding: 20px; overflow: hidden;
     display: grid; justify-items: center;
   }
-  .ascii-layer {
+  .grf-canvas {
     grid-column: 1; grid-row: 1;
-    font-family: var(--font-mono); font-size: clamp(6px, 1.15vw, 11px);
-    line-height: 1.15; letter-spacing: 0; color: var(--fg);
-    user-select: none; width: max-content;
+    display: block; width: 100%; max-width: 420px; height: auto; aspect-ratio: 1 / 1;
+    border-radius: 6px; image-rendering: auto;
     transition: opacity 280ms ease;
     opacity: 1;
   }
-  .ascii-layer.hidden { opacity: 0; }
-  .ascii-row { white-space: pre; }
+  .grf-canvas.hidden { opacity: 0; }
 
   .ascii-controls {
     display: flex; align-items: center; justify-content: space-between;
@@ -334,8 +332,8 @@
   </p>
 
   <div class="ascii-hero" id="asciiHero">
-    <div class="ascii-layer" id="asciiLayerA" aria-hidden="true"></div>
-    <div class="ascii-layer hidden" id="asciiLayerB" aria-hidden="true"></div>
+    <canvas class="grf-canvas" id="grfCanvasA" width="400" height="400" aria-hidden="true"></canvas>
+    <canvas class="grf-canvas hidden" id="grfCanvasB" width="400" height="400" aria-hidden="true"></canvas>
   </div>
   <div class="ascii-controls">
     <button type="button" class="demo-btn" id="regenBtn">Generate new field</button>
@@ -639,18 +637,18 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
     });
   });
 
-  // ---------- hero ASCII GRF field generator ----------
+  // ---------- hero GRF field generator ----------
   // Mirrors src/xai/simulation/grf/grf_model.py's generate_power_spectrum(alpha, scale)
   // + FyeldGenerator.generate_field: complex Gaussian noise in Fourier space,
   // amplitude-scaled by k^(-alpha/2), inverse 2D-FFT'd, real part taken as the field.
+  // Rendered as a colored canvas (matplotlib "Spectral" colormap, same as
+  // scripts/run_grf_tutorial_31.py's reference figure) instead of ASCII text.
   (function () {
-    var N = 64;           // internal field resolution -- matches grf_model.py's FIELD_SHAPE
-    var COLS = 60, ROWS = 24; // displayed ASCII grid size
-    var RAMP = ' .:-=+*#%@';
+    var N = 64; // internal field resolution -- matches grf_model.py's FIELD_SHAPE
 
     var hero = document.getElementById('asciiHero');
-    var layerA = document.getElementById('asciiLayerA');
-    var layerB = document.getElementById('asciiLayerB');
+    var layerA = document.getElementById('grfCanvasA');
+    var layerB = document.getElementById('grfCanvasB');
     var regenBtn = document.getElementById('regenBtn');
     var alphaReadout = document.getElementById('alphaReadout');
     if (!hero || !layerA || !layerB || !regenBtn || !alphaReadout) return;
@@ -730,58 +728,61 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
       return ifft2d(re, im, N); // raw field, un-normalized -- see downsampleAndNormalize
     }
 
-    // Area-average NxN down to the ROWSxCOLS display grid (instead of
-    // nearest-neighbor point sampling), so single-pixel FFT noise gets
-    // averaged out the way a continuous colormap hides it via color
-    // interpolation -- then percentile-clip (not raw min/max) before the
-    // 10-level RAMP quantization, so a couple of extreme pixels can't
-    // compress the rest of the field into 1-2 characters.
-    function downsampleAndNormalize(field) {
-      var cellR = N / ROWS, cellC = N / COLS;
-      var out = [], vals = [];
-      for (var r = 0; r < ROWS; r++) {
-        var r0 = Math.floor(r * cellR), r1 = Math.max(r0 + 1, Math.floor((r + 1) * cellR));
-        var row = new Float64Array(COLS);
-        for (var c = 0; c < COLS; c++) {
-          var c0 = Math.floor(c * cellC), c1 = Math.max(c0 + 1, Math.floor((c + 1) * cellC));
-          var sum = 0, cnt = 0;
-          for (var rr = r0; rr < r1 && rr < N; rr++) {
-            for (var cc = c0; cc < c1 && cc < N; cc++) { sum += field[rr][cc]; cnt++; }
-          }
-          var v = sum / cnt;
-          row[c] = v;
-          vals.push(v);
-        }
-        out.push(row);
+    // matplotlib's "Spectral" colormap (13 sampled control points, piecewise
+    // linear-interpolated) -- the same colormap scripts/run_grf_tutorial_31.py
+    // uses for outputs/figures/grf_tutorial/31_02_multi_alpha_fields.png.
+    var SPECTRAL_STOPS = [
+      [158, 1, 66], [203, 51, 77], [233, 92, 71], [249, 142, 82], [253, 191, 111],
+      [254, 229, 147], [255, 255, 190], [234, 247, 158], [191, 229, 160], [134, 207, 165],
+      [84, 174, 173], [58, 126, 184], [94, 79, 162]
+    ];
+    function spectralColor(t) {
+      t = Math.max(0, Math.min(1, t));
+      var n = SPECTRAL_STOPS.length - 1;
+      var pos = t * n;
+      var i = Math.min(n - 1, Math.floor(pos));
+      var frac = pos - i;
+      var a = SPECTRAL_STOPS[i], b = SPECTRAL_STOPS[i + 1];
+      return [
+        Math.round(a[0] + (b[0] - a[0]) * frac),
+        Math.round(a[1] + (b[1] - a[1]) * frac),
+        Math.round(a[2] + (b[2] - a[2]) * frac)
+      ];
+    }
+
+    // Same normalization as the reference script: vmin=-max_magnitude,
+    // vmax=+max_magnitude (symmetric around 0), i.e. t = (value/maxAbs + 1) / 2.
+    function fieldToImageData(field) {
+      var imgData = new ImageData(N, N);
+      var maxAbs = 1e-12;
+      for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
+        var av = Math.abs(field[i][j]);
+        if (av > maxAbs) maxAbs = av;
       }
-      vals.sort(function (a, b) { return a - b; });
-      var lo = vals[Math.floor(vals.length * 0.02)];
-      var hi = vals[Math.ceil(vals.length * 0.98) - 1];
-      if (hi <= lo) hi = lo + 1e-9;
-      for (var r2 = 0; r2 < ROWS; r2++) {
-        for (var c2 = 0; c2 < COLS; c2++) {
-          out[r2][c2] = Math.max(0, Math.min(1, (out[r2][c2] - lo) / (hi - lo)));
+      for (var i2 = 0; i2 < N; i2++) {
+        for (var j2 = 0; j2 < N; j2++) {
+          var t = (field[i2][j2] / maxAbs + 1) / 2;
+          var rgb = spectralColor(t);
+          var idx = (i2 * N + j2) * 4;
+          imgData.data[idx] = rgb[0];
+          imgData.data[idx + 1] = rgb[1];
+          imgData.data[idx + 2] = rgb[2];
+          imgData.data[idx + 3] = 255;
         }
       }
-      return out;
+      return imgData;
     }
 
     function renderFieldToLayer(layer, field) {
-      var display = downsampleAndNormalize(field);
-      var frag = document.createDocumentFragment();
-      for (var r = 0; r < ROWS; r++) {
-        var line = '';
-        for (var c = 0; c < COLS; c++) {
-          var lvl = Math.min(RAMP.length - 1, Math.floor(display[r][c] * RAMP.length));
-          line += RAMP[lvl];
-        }
-        var rowDiv = document.createElement('div');
-        rowDiv.className = 'ascii-row';
-        rowDiv.textContent = line;
-        frag.appendChild(rowDiv);
-      }
-      layer.innerHTML = '';
-      layer.appendChild(frag);
+      var srcCanvas = document.createElement('canvas');
+      srcCanvas.width = N; srcCanvas.height = N;
+      srcCanvas.getContext('2d').putImageData(fieldToImageData(field), 0, 0);
+
+      var ctx = layer.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.clearRect(0, 0, layer.width, layer.height);
+      ctx.drawImage(srcCanvas, 0, 0, N, N, 0, 0, layer.width, layer.height);
     }
 
     var visibleLayer = layerA, hiddenLayer = layerB;
