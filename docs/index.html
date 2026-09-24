@@ -203,6 +203,49 @@
     color: var(--muted-2); margin: 10px 0 0 0; letter-spacing: 0.04em;
   }
 
+  /* ---------- live picker demo ---------- */
+  .demo-picker {
+    margin: 22px 0 30px 0; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card-bg); padding: 22px;
+  }
+  .demo-picker-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .demo-picker-row + .demo-picker-row { margin-top: 12px; }
+  .demo-picker-label {
+    font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted-2); width: 86px; flex-shrink: 0;
+  }
+  .demo-btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .demo-btn {
+    font-family: var(--font-mono); font-size: 12.5px; padding: 7px 13px;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    border-radius: 6px; cursor: pointer; transition: background 150ms ease, color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+  }
+  .demo-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--fg); }
+  .demo-btn.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .demo-btn:disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+  .demo-result {
+    margin-top: 18px; border-radius: 8px; overflow: hidden; min-height: 140px;
+    position: relative; background: var(--bg); border: 1px solid var(--border);
+  }
+  .demo-result img {
+    width: 100%; display: block; border: none; border-radius: 0;
+    opacity: 0; transition: opacity 220ms ease;
+  }
+  .demo-result img.visible { opacity: 1; }
+  .demo-result img.visible:hover { opacity: 0.85; transform: scale(1.01); }
+  .demo-empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 12.5px; text-align: center;
+    color: var(--muted-2); padding: 20px; margin: 0; opacity: 0; pointer-events: none;
+    transition: opacity 150ms ease;
+  }
+  .demo-empty.visible { opacity: 1; }
+  .demo-config {
+    font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-2);
+    margin: 12px 0 0 0;
+  }
+  .demo-config b { color: var(--accent); font-weight: 600; }
+
   /* ---------- code blocks ---------- */
   .code {
     background: var(--code-bg); color: var(--code-fg);
@@ -261,8 +304,9 @@
   .card img { margin-top: 4px; }
   .card p { font-size: 13.5px; margin: 0; }
   .card h3 a {
-    color: inherit; text-decoration: underline; text-decoration-color: var(--border);
+    display: block; color: inherit; text-decoration: underline; text-decoration-color: var(--border);
     text-underline-offset: 3px; transition: color 150ms ease, text-decoration-color 150ms ease;
+    position: relative; z-index: 1;
   }
   .card h3 a:hover { color: var(--accent); text-decoration-color: var(--accent); }
 
@@ -405,6 +449,32 @@
     </div>
   </div>
   <p class="diagram-caption">SIR &middot; Lotka-Volterra &middot; GRF &rarr; XAI Methods</p>
+
+  <div class="demo-picker" id="demoPicker">
+    <div class="demo-picker-row">
+      <span class="demo-picker-label">Simulator</span>
+      <div class="demo-btn-group" id="demoSimGroup" role="group" aria-label="Simulator">
+        <button type="button" class="demo-btn" data-sim="sir">SIR</button>
+        <button type="button" class="demo-btn" data-sim="lotka_volterra">Lotka-Volterra</button>
+        <button type="button" class="demo-btn" data-sim="grf">GRF</button>
+      </div>
+    </div>
+    <div class="demo-picker-row">
+      <span class="demo-picker-label">XAI Method</span>
+      <div class="demo-btn-group" id="demoMethodGroup" role="group" aria-label="XAI Method">
+        <button type="button" class="demo-btn" data-method="integrated_gradients">Integrated Gradients</button>
+        <button type="button" class="demo-btn" data-method="saliency_map">Saliency Map</button>
+        <button type="button" class="demo-btn" data-method="attention_rollout">Attention Rollout</button>
+        <button type="button" class="demo-btn" data-method="masking">Masking</button>
+      </div>
+    </div>
+
+    <div class="demo-result">
+      <img id="demoResultImg" class="visible" src="figures/xai_02_integrated_gradients.png" alt="SIR + Integrated Gradients: channel importance" />
+      <p class="demo-empty" id="demoEmpty">No XAI-method result figure checked in for GRF yet &mdash; try SIR or Lotka-Volterra.</p>
+    </div>
+    <p class="demo-config" id="demoConfig"><b>simulator:</b> sir &middot; <b>xai_method:</b> integrated_gradients</p>
+  </div>
 
   <div class="code"><pre><span class="c1"># clone, then from the project root:</span>
 <span class="prompt">$</span> python -m venv .venv &amp;&amp; source .venv/bin/activate
@@ -705,6 +775,91 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && overlay.classList.contains('active')) closeLightbox();
     });
+  })();
+
+  // ---------- live simulator / XAI method picker ----------
+  (function () {
+    var COMBOS = {
+      sir: {
+        integrated_gradients: { img: 'figures/xai_02_integrated_gradients.png', alt: 'SIR + Integrated Gradients: channel importance' },
+        saliency_map: { img: 'figures/workflow_sir_saliency_map_saliency_map.png', alt: 'SIR + Saliency Map: channel importance' },
+        attention_rollout: { img: 'figures/xai_03b_attention_connections.png', alt: 'SIR + Attention Rollout: BertViz-style connections' },
+        masking: { img: 'figures/workflow_sir_masking_masking_time_importance.png', alt: 'SIR + Masking/Occlusion: time importance' }
+      },
+      lotka_volterra: {
+        integrated_gradients: { img: 'figures/xai_lv_04_channel_time_importance_stats.png', alt: 'Lotka-Volterra + Integrated Gradients: channel/time importance stats' }
+      },
+      grf: {}
+    };
+
+    var simGroup = document.getElementById('demoSimGroup');
+    var methodGroup = document.getElementById('demoMethodGroup');
+    var resultImg = document.getElementById('demoResultImg');
+    var emptyMsg = document.getElementById('demoEmpty');
+    var configLine = document.getElementById('demoConfig');
+    if (!simGroup || !methodGroup || !resultImg || !emptyMsg || !configLine) return;
+
+    var state = { sim: 'sir', method: 'integrated_gradients' };
+
+    function refreshButtons() {
+      var available = COMBOS[state.sim] || {};
+      if (!available[state.method]) {
+        var keys = Object.keys(available);
+        state.method = keys.length ? keys[0] : null;
+      }
+      simGroup.querySelectorAll('.demo-btn').forEach(function (btn) {
+        btn.classList.toggle('active', btn.dataset.sim === state.sim);
+      });
+      methodGroup.querySelectorAll('.demo-btn').forEach(function (btn) {
+        var ok = !!available[btn.dataset.method];
+        btn.disabled = !ok;
+        btn.classList.toggle('active', ok && btn.dataset.method === state.method);
+      });
+    }
+
+    function applyResult(fade) {
+      var combo = state.method ? (COMBOS[state.sim] || {})[state.method] : null;
+      if (combo) {
+        emptyMsg.classList.remove('visible');
+        configLine.innerHTML = '<b>simulator:</b> ' + state.sim + ' &middot; <b>xai_method:</b> ' + state.method;
+        if (fade) {
+          resultImg.classList.remove('visible');
+          window.setTimeout(function () {
+            resultImg.src = combo.img;
+            resultImg.alt = combo.alt;
+            resultImg.classList.add('visible');
+          }, 120);
+        } else {
+          resultImg.src = combo.img;
+          resultImg.alt = combo.alt;
+          resultImg.classList.add('visible');
+        }
+      } else {
+        resultImg.classList.remove('visible');
+        emptyMsg.classList.add('visible');
+        configLine.textContent = '';
+      }
+    }
+
+    function render(fade) {
+      refreshButtons();
+      applyResult(fade);
+    }
+
+    simGroup.addEventListener('click', function (e) {
+      var btn = e.target.closest('.demo-btn');
+      if (!btn) return;
+      state.sim = btn.dataset.sim;
+      render(true);
+    });
+    methodGroup.addEventListener('click', function (e) {
+      var btn = e.target.closest('.demo-btn');
+      if (!btn || btn.disabled) return;
+      state.method = btn.dataset.method;
+      render(true);
+    });
+
+    render(false);
   })();
 </script>
 
