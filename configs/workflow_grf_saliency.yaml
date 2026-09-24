@@ -1,0 +1,12 @@
+# Config-driven workflow: GRF + Saliency Map (see
+# configs/workflow_example.yaml for the full field-by-field docs).
+simulator: grf
+summary_network: conv
+inference_network: coupling_flow
+target: alpha
+xai_method: saliency_map
+
+n_sims: 2000
+epochs: 30
+batch_size: 32
+seed: 42

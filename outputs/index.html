@@ -471,7 +471,7 @@
 
     <div class="demo-result">
       <img id="demoResultImg" class="visible" src="figures/xai_02_integrated_gradients.png" alt="SIR + Integrated Gradients: channel importance" />
-      <p class="demo-empty" id="demoEmpty">No XAI-method result figure checked in for GRF yet &mdash; try SIR or Lotka-Volterra.</p>
+      <p class="demo-empty" id="demoEmpty">No result figure for this combination yet.</p>
     </div>
     <p class="demo-config" id="demoConfig"><b>simulator:</b> sir &middot; <b>xai_method:</b> integrated_gradients</p>
   </div>
@@ -789,7 +789,11 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
       lotka_volterra: {
         integrated_gradients: { img: 'figures/xai_lv_04_channel_time_importance_stats.png', alt: 'Lotka-Volterra + Integrated Gradients: channel/time importance stats' }
       },
-      grf: {}
+      grf: {
+        integrated_gradients: { img: 'figures/workflow_grf_integrated_gradients_integrated_gradients.png', alt: 'GRF + Integrated Gradients: pixel attribution' },
+        saliency_map: { img: 'figures/workflow_grf_saliency_map_saliency_map.png', alt: 'GRF + Saliency Map: pixel map' },
+        masking: { img: 'figures/workflow_grf_masking_masking_patch_importance.png', alt: 'GRF + Masking/Occlusion: patch importance' }
+      }
     };
 
     var simGroup = document.getElementById('demoSimGroup');
@@ -813,6 +817,7 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
       methodGroup.querySelectorAll('.demo-btn').forEach(function (btn) {
         var ok = !!available[btn.dataset.method];
         btn.disabled = !ok;
+        btn.title = ok ? '' : 'No result figure for this simulator + method combination.';
         btn.classList.toggle('active', ok && btn.dataset.method === state.method);
       });
     }
