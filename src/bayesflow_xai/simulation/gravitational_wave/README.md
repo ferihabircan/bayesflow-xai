@@ -1,12 +1,17 @@
 # Gravitational wave (PyCBC, IMRPhenomPv2)
 
-> **Not the notebook's simulator.** `4_1_grav_waves.ipynb` uses
-> `GravitationalWaveBenchmarkSimulator` from an external package
-> (`paper.fig8_grav_wave_npe...`) plus pre-generated data
-> (`data/gws-train.h5`, ~2.5 GB) -- neither is available here. This
-> subpackage is **not identical** to it. It is a physically reasonable
-> alternative that uses PyCBC's own waveform generator with the parameters
-> of `config_file_pycbcmaster.ini`.
+> **Two simulators live here.**
+>
+> - `simulator.py` (registered as `gravitational_wave`) is our own PyCBC
+>   frequency-domain alternative with the parameters of
+>   `config_file_pycbcmaster.ini`. It is **not identical** to the
+>   notebook's simulator; everything below describes it.
+> - `sbi_practical_guide/` (registered as `gravitational_wave_guide`) is the
+>   notebook's original `GravitationalWaveBenchmarkSimulator`, vendored
+>   verbatim from https://github.com/sbi-dev/sbi-practical-guide
+>   (`paper/fig8_grav_wave/workflow/scripts/external/`, MIT). Its
+>   `__init__.py` reproduces the guide's data generation (prior, mass
+>   conversion, min-max normalisation) for the registry. See its docstring.
 
 ## What it does
 

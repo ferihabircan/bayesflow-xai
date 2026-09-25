@@ -72,8 +72,9 @@ def _build_grf_spec() -> SimulatorSpec:
     )
 
 
-# PyCBC IMRPhenomPv2 alternative to the notebook's (unavailable)
-# GravitationalWaveBenchmarkSimulator -- see simulation/gravitational_wave/README.md.
+# PyCBC IMRPhenomPv2 alternative to the notebook's
+# GravitationalWaveBenchmarkSimulator (registered below as
+# gravitational_wave_guide) -- see simulation/gravitational_wave/README.md.
 @register_simulator("gravitational_wave", targets=["mass1", "mass_ratio"])
 def _build_gravitational_wave_spec() -> SimulatorSpec:
     from bayesflow_xai.simulation.gravitational_wave.simulator import (
@@ -87,6 +88,23 @@ def _build_gravitational_wave_spec() -> SimulatorSpec:
         param_names=PARAM_NAMES,
         input_kind="timeseries",
         build_tensor_dataset=build_gw_tensor_dataset,
+        channel_names=CHANNEL_NAMES,
+        in_channels=2,
+    )
+
+
+# The notebook's original GravitationalWaveBenchmarkSimulator, vendored from
+# sbi-practical-guide -- see simulation/gravitational_wave/sbi_practical_guide.
+@register_simulator("gravitational_wave_guide", targets=["mass1", "mass_ratio"])
+def _build_gravitational_wave_guide_spec() -> SimulatorSpec:
+    from bayesflow_xai.simulation.gravitational_wave.simulator import PARAM_NAMES, CHANNEL_NAMES
+    from bayesflow_xai.simulation.gravitational_wave.sbi_practical_guide import build_guide_tensor_dataset
+
+    return SimulatorSpec(
+        name="gravitational_wave_guide",
+        param_names=PARAM_NAMES,
+        input_kind="timeseries",
+        build_tensor_dataset=build_guide_tensor_dataset,
         channel_names=CHANNEL_NAMES,
         in_channels=2,
     )

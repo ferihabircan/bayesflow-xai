@@ -1,6 +1,7 @@
 """Gravitational-wave (compact binary, PyCBC IMRPhenomPv2) simulator
 subpackage. See README.md -- in particular: this is a PyCBC-based
-alternative, NOT the notebook's GravitationalWaveBenchmarkSimulator.
+alternative, NOT the notebook's GravitationalWaveBenchmarkSimulator (that one is
+vendored in the sbi_practical_guide subpackage).
 
 Only numpy is needed at import time; pycbc/lal/scipy/torch are imported
 lazily inside the functions that use them.
