@@ -1,12 +1,12 @@
 # Config-driven workflow: pick a simulator, a summary network, an
 # inference network, the parameter you want explained, and an XAI method
 # -- scripts/run_workflow.py reads this file, looks each name up in the
-# xai.registry, and runs the pipeline end to end.
+# bayesflow_xai.registry, and runs the pipeline end to end.
 #
-# Valid names come from xai.registrations (import it and inspect
-# xai.registry.SIMULATORS / SUMMARY_NETWORKS / INFERENCE_NETWORKS /
+# Valid names come from bayesflow_xai.registrations (import it and inspect
+# bayesflow_xai.registry.SIMULATORS / SUMMARY_NETWORKS / INFERENCE_NETWORKS /
 # XAI_METHODS to see what's currently registered, including anything you
-# add yourself -- see xai/registry.py for how to register a new one).
+# add yourself -- see bayesflow_xai/registry.py for how to register a new one).
 
 # 1) HANGI SIMULASYON/MODEL?
 #    Options: sir | lotka_volterra | grf

@@ -1,5 +1,5 @@
-from xai.simulation.dataset import build_sir_tensor_dataset
-from xai.utils.config import CONFIG
+from bayesflow_xai.simulation.dataset import build_sir_tensor_dataset
+from bayesflow_xai.utils.config import CONFIG
 
 
 def test_dataset_shapes():
