@@ -3,6 +3,7 @@
     simulation/sir/              SIR epidemic model (sir_model.py, adapter.py)
     simulation/lotka_volterra/   Lotka-Volterra-style example (lotka_volterra_model.py)
     simulation/grf/              Gaussian Random Field example (grf_model.py, grf_generative_model.py)
+    simulation/gravitational_wave/  PyCBC IMRPhenomPv2 compact-binary simulator (simulator.py)
 
 `dataset.py` (this package, top level) builds the tensor datasets shared by
 the XAI surrogate models across simulators.

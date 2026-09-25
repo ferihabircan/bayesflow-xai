@@ -1,8 +1,9 @@
 """Built-in plugin registrations for bayesflow_xai.registry.
 
 Importing this module (scripts/run_workflow.py does this once, at the
-top) registers the project's 3 built-in simulators (sir, lotka_volterra,
-grf), 3 summary-network builders (gru, conv, transformer), 1 inference
+top) registers the project's 4 built-in simulators (sir, lotka_volterra,
+grf, gravitational_wave), 4 summary-network builders (gru, conv, transformer,
+gw_paper_cnn), 1 inference
 network (coupling_flow), and 4 XAI methods (integrated_gradients,
 saliency_map, attention_rollout, masking).
 
@@ -71,6 +72,26 @@ def _build_grf_spec() -> SimulatorSpec:
     )
 
 
+# PyCBC IMRPhenomPv2 alternative to the notebook's (unavailable)
+# GravitationalWaveBenchmarkSimulator -- see simulation/gravitational_wave/README.md.
+@register_simulator("gravitational_wave", targets=["mass1", "mass_ratio"])
+def _build_gravitational_wave_spec() -> SimulatorSpec:
+    from bayesflow_xai.simulation.gravitational_wave.simulator import (
+        build_gw_tensor_dataset,
+        PARAM_NAMES,
+        CHANNEL_NAMES,
+    )
+
+    return SimulatorSpec(
+        name="gravitational_wave",
+        param_names=PARAM_NAMES,
+        input_kind="timeseries",
+        build_tensor_dataset=build_gw_tensor_dataset,
+        channel_names=CHANNEL_NAMES,
+        in_channels=2,
+    )
+
+
 # =====================================================================
 # 2) SUMMARY NETWORKS
 # =====================================================================
@@ -111,6 +132,26 @@ def _build_transformer_summary_network(
         )
     return TransformerSummaryNet(
         in_dim=spec.in_channels, d_model=d_model, n_heads=n_heads, n_layers=n_layers, summary_dim=summary_dim
+    )
+
+
+# PaperEmbedding from notebooks/4_1_grav_waves.ipynb (dilated Conv1d + SELU).
+# Needs >= 2**nlayers timepoints; the gravitational_wave dataset gives 8192.
+@register_summary_network("gw_paper_cnn")
+def _build_gw_paper_cnn_summary_network(
+    spec: SimulatorSpec, n_timepoints: int = 8192, nlayers: int = 13,
+    intermediate_channels: int = 16, nfinal_channels: int = 16,
+):
+    from bayesflow_xai.simulation.gravitational_wave.embedding import GWPaperCNNSummaryNet
+
+    if spec.input_kind != "timeseries":
+        raise ValueError(
+            f"summary_network 'gw_paper_cnn' requires a timeseries simulator, "
+            f"got '{spec.name}' (input_kind={spec.input_kind})"
+        )
+    return GWPaperCNNSummaryNet(
+        in_channels=spec.in_channels, n_timepoints=n_timepoints, nlayers=nlayers,
+        intermediate_channels=intermediate_channels, nfinal_channels=nfinal_channels,
     )
 
 
