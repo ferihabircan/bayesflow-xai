@@ -4,19 +4,20 @@ workflows: which part of the 4 s window (inspiral / merger / ringdown) and
 which detector (H1 / L1) the surrogate's prediction relies on.
 
 Reads the .npz written by `integrated_gradients_generic(save_attributions=True)`
-(see configs/gravitational_wave*_workflow.yaml), so run the workflow first:
+(see configs/gravitational_wave*_workflow.yaml) or scripts/run_gw_xai_comparison.py,
+so run the workflow first:
 
     python scripts/run_workflow.py --config configs/gravitational_wave_workflow.yaml
     python scripts/plot_gw_ig_time.py --target mass1
 
-Pass several --npz/--label pairs to compare simulators, one row each:
+Pass several --npz/--label pairs to compare runs or methods, one row each:
 
     python scripts/plot_gw_ig_time.py \\
-        --npz outputs/workflow_gravitational_wave_integrated_gradients_integrated_gradients.npz --label ours \\
-        --npz outputs/workflow_gravitational_wave_guide_integrated_gradients_integrated_gradients.npz --label original \\
+        --npz outputs/workflow_gravitational_wave_integrated_gradients_integrated_gradients.npz --label min-max \\
+        --npz outputs/workflow_gravitational_wave_zscore_integrated_gradients_integrated_gradients.npz --label z-score \\
         --out outputs/figures/gw_ig_time_comparison.png
 
-Both simulators align every sample so the H1 merger is at t = 0
+The simulator aligns every sample so the H1 merger is at t = 0
 (seconds_before_event = 3.5 s into the window), which makes attributions
 directly averageable across samples.
 """
@@ -30,7 +31,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from bayesflow_xai.simulation.gravitational_wave.simulator import (
+from bayesflow_xai.simulation.gravitational_wave import (
     CHANNEL_NAMES,
     SAMPLING_RATE,
     SECONDS_BEFORE_EVENT,
@@ -69,7 +70,7 @@ def summarize(path, label):
     total = absA.sum()
     s = {
         "label": label, "n": n, "t": t, "absA": absA, "signal_env": signal_env,
-        "delta": np.abs(d["delta"]).mean(),
+        "delta": np.abs(d["delta"]).mean() if "delta" in d else np.nan,  # IG only
         "n_steps": int(d["n_steps"]) if "n_steps" in d else 50,
         "channel_share": absA.sum(axis=(0, 1)) / total,
         "signal_channel_share": ((X - baseline) ** 2).sum(axis=(0, 1)) / ((X - baseline) ** 2).sum(),
@@ -103,7 +104,7 @@ def plot_row(ax_full, ax_zoom, ax_bar, s, target):
     for ax, (lo, hi), w in [(ax_full, (-3.5, 0.5), 41), (ax_zoom, (-0.3, 0.08), 5)]:
         m = (t >= lo) & (t <= hi)
         for c, name in enumerate(CHANNEL_NAMES):
-            ax.plot(t[m], _smooth(absA[:, :, c].mean(axis=0), w)[m], color=COLORS[c], lw=1, label=f"|IG| {name}")
+            ax.plot(t[m], _smooth(absA[:, :, c].mean(axis=0), w)[m], color=COLORS[c], lw=1, label=f"|attr| {name}")
         ax2 = ax.twinx()
         ax2.fill_between(t[m], _smooth(s["signal_env"], w)[m], color="grey", alpha=0.2, lw=0)
         ax2.set_yticks([])
@@ -114,11 +115,12 @@ def plot_row(ax_full, ax_zoom, ax_bar, s, target):
         ax.patch.set_visible(False)
     ax_full.legend(loc="upper left")
     ax_full.set_title(
-        f"{s['label']}: IG over time, target={target} (n={s['n']}, n_steps={s['n_steps']}, "
-        f"mean |delta|={s['delta']:.3f}; grey: mean |signal|; dashed: H1 merger)"
+        f"{s['label']}: attribution over time, target={target} (n={s['n']}"
+        + (f", n_steps={s['n_steps']}, mean |delta|={s['delta']:.3f}" if np.isfinite(s["delta"]) else "")
+        + "; grey: mean |signal|; dashed: H1 merger)"
     )
     ax_zoom.set_xlabel("time relative to H1 merger [s]")
-    ax_zoom.set_title(f"{s['label']}: zoom on merger ({s['last_0p2s']:.0%} of |IG| in last 0.2 s)")
+    ax_zoom.set_title(f"{s['label']}: zoom on merger ({s['last_0p2s']:.0%} of |attribution| in last 0.2 s)")
 
     x = np.arange(len(CHANNEL_NAMES))
     ax_bar.bar(x - 0.2, s["channel_share"] * 100, width=0.4, color=COLORS, label="|attribution|")

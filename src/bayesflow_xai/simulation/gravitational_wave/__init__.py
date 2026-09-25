@@ -1,28 +1,32 @@
 """Gravitational-wave (compact binary, PyCBC IMRPhenomPv2) simulator
-subpackage. See README.md -- in particular: this is a PyCBC-based
-alternative, NOT the notebook's GravitationalWaveBenchmarkSimulator (that one is
-vendored in the sbi_practical_guide subpackage).
+subpackage: the notebook's original `GravitationalWaveBenchmarkSimulator`
+from sbi-dev/sbi-practical-guide, vendored in `sbi_practical_guide/`, plus
+the notebook's PaperEmbedding summary network in `embedding.py`. See
+README.md.
 
-Only numpy is needed at import time; pycbc/lal/scipy/torch are imported
-lazily inside the functions that use them.
+pycbc/lal/torch are imported lazily inside the functions that use them.
 """
 
-from bayesflow_xai.simulation.gravitational_wave.simulator import (  # noqa: F401
+from bayesflow_xai.simulation.gravitational_wave.sbi_practical_guide import (  # noqa: F401
     simulate,
-    simulate_one,
-    sample_prior,
     build_gw_tensor_dataset,
-    PRIORS,
     PARAM_NAMES,
     CHANNEL_NAMES,
+    SAMPLING_RATE,
+    SECONDS_BEFORE_EVENT,
+    SECONDS_AFTER_EVENT,
+    THETA_LOW,
+    THETA_HIGH,
 )
 
 __all__ = [
     "simulate",
-    "simulate_one",
-    "sample_prior",
     "build_gw_tensor_dataset",
-    "PRIORS",
     "PARAM_NAMES",
     "CHANNEL_NAMES",
+    "SAMPLING_RATE",
+    "SECONDS_BEFORE_EVENT",
+    "SECONDS_AFTER_EVENT",
+    "THETA_LOW",
+    "THETA_HIGH",
 ]

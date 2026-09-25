@@ -3,61 +3,62 @@ import pytest
 
 pytest.importorskip("pycbc")
 
-from bayesflow_xai.simulation.gravitational_wave import simulator as gw
+from bayesflow_xai.simulation import gravitational_wave as gw
 
 
-def test_prior_ranges_and_mass_ordering():
-    p = gw.sample_prior(2000, rng=0)
-    for name, (_, low, high) in gw.PRIORS.items():
-        assert p[name].min() >= low and p[name].max() <= high
-    for name, (low, high) in gw.THETA_PRIOR.items():
-        assert p[name].min() >= low and p[name].max() <= high
-    assert np.allclose(p["mass2"], p["mass_ratio"] * p["mass1"])
-    assert np.all(p["mass1"] >= p["mass2"])
+def test_window_constants_match_embedding_input():
+    assert gw.SAMPLING_RATE * (gw.SECONDS_BEFORE_EVENT + gw.SECONDS_AFTER_EVENT) == 8192
+    assert gw.CHANNEL_NAMES == ["H1", "L1"]
+    assert gw.PARAM_NAMES == ["mass1", "mass_ratio"]
 
 
-def test_noise_free_norm_equals_optimal_snr():
-    from pycbc.filter import sigma
-    from pycbc.psd import aLIGOZeroDetHighPower
-    from pycbc.types import FrequencySeries
-
-    params = dict(mass1=60.0, mass2=30.0, spin1z=-0.85, spin2z=0.85,
-                  inclination=0.4, distance=400.0, tc=gw.TC_REF + 0.05, coa_phase=1.0)
-    x = gw.simulate_one(params, rng=0, add_noise=False)
-    psd = aLIGOZeroDetHighPower(gw.N_FREQ, gw.DELTA_F, gw.F_LOWER)
-    hp, hc = gw._polarisations(params)
-    for i, (fp, fc, _) in enumerate(gw.detector_response(params["tc"])):
-        h = FrequencySeries(fp * hp + fc * hc, delta_f=gw.DELTA_F)
-        snr = sigma(h, psd=psd, low_frequency_cutoff=gw.F_LOWER)
-        assert np.isclose(np.linalg.norm(x[i]), snr, rtol=1e-3)
+def test_simulate_shapes_prior_and_seed():
+    thetas, xs = gw.simulate(4, seed=0, num_workers=2, chunk_size=2)
+    assert thetas.shape == (4, 2)
+    assert xs.shape == (4, 2, 8192)
+    assert np.isfinite(xs).all()
+    assert np.all((thetas >= gw.THETA_LOW) & (thetas <= gw.THETA_HIGH))
+    # Same seed -> same parameters and (up to FFT round-off) same strain.
+    thetas2, xs2 = gw.simulate(4, seed=0, num_workers=1, chunk_size=2)
+    assert np.array_equal(thetas, thetas2)
+    assert np.allclose(xs, xs2, rtol=0, atol=1e-6 * np.abs(xs).max())
 
 
-def test_detector_response_matches_pycbc():
-    from pycbc.detector import Detector
+def test_mass_conversion_matches_original_script():
+    # script-generate-gws.py feeds [mass1, mass_ratio * mass1] to the simulator.
+    import torch
+    from bayesflow_xai.simulation.gravitational_wave.sbi_practical_guide import CONFIG_PATH
+    from bayesflow_xai.simulation.gravitational_wave.sbi_practical_guide.simulator import (
+        GravitationalWaveBenchmarkSimulator,
+    )
 
-    tc = gw.TC_REF + 0.03
-    for (fp, fc, dt), name in zip(gw.detector_response(tc), gw.CHANNEL_NAMES):
-        det = Detector(name)
-        assert (fp, fc) == det.antenna_pattern(gw.RA, gw.DEC, gw.POLARIZATION, tc)
-        assert dt == det.time_delay_from_earth_center(gw.RA, gw.DEC, tc)
-    # H1-L1 separation is ~10 ms; any sky position must stay within it.
-    (_, _, dt_h1), (_, _, dt_l1) = gw.detector_response(tc)
-    assert abs(dt_h1 - dt_l1) < 0.0101
+    seen = []
+    sim = GravitationalWaveBenchmarkSimulator(CONFIG_PATH)
+    sim._simulate_gw = lambda m1, m2: seen.append((float(m1), float(m2))) or (np.zeros(8192), np.zeros(8192))
+    thetas = torch.tensor([[60.0, 0.5]])
+    sim(torch.stack([thetas[:, 0], thetas[:, 1] * thetas[:, 0]], dim=1))
+    assert seen == [(60.0, 30.0)]
 
 
-def test_tensor_dataset_shapes():
-    X, y = gw.build_gw_tensor_dataset(3, rng=0)
+@pytest.mark.parametrize("normalization", ["minmax", "zscore"])
+def test_tensor_dataset(normalization):
+    X, y = gw.build_gw_tensor_dataset(3, seed=0, normalization=normalization)
     assert tuple(X.shape) == (3, 8192, 2)
     assert tuple(y.shape) == (3, 2)
     assert bool(X.isfinite().all())
-    assert bool(((y[:, 1] >= 0.25) & (y[:, 1] <= 0.99)).all())
+    if normalization == "minmax":
+        assert float(X.min()) == 0.0 and float(X.max()) == 1.0
+    else:
+        assert abs(float(X.mean())) < 1e-3 and abs(float(X.std()) - 1) < 1e-3
+    with pytest.raises(ValueError):
+        gw.build_gw_tensor_dataset(1, normalization="nope")
 
 
 def test_paper_embedding_matches_dataset():
     import torch
     from bayesflow_xai.simulation.gravitational_wave.embedding import GWPaperCNNSummaryNet
 
-    X, _ = gw.build_gw_tensor_dataset(2, rng=0)
+    X, _ = gw.build_gw_tensor_dataset(2, seed=0, normalization="zscore")
     net = GWPaperCNNSummaryNet(in_channels=2, n_timepoints=X.shape[1])
     with torch.no_grad():
         out = net(X)
