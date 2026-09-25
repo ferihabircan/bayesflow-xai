@@ -78,6 +78,9 @@ def run_workflow(config: dict):
 
     print(f"=== 1) Simulator: {sim_name} (target={target}) ===")
     spec = SIMULATORS[sim_name]()
+    # Optional run_tag keeps outputs of config variants (e.g. a different
+    # normalisation) from overwriting each other.
+    run_name = sim_name + (f"_{config['run_tag']}" if config.get("run_tag") else "")
     target_idx = spec.param_names.index(target)
 
     # -----------------------------------------------------------------
@@ -115,13 +118,13 @@ def run_workflow(config: dict):
     seed = config.get("seed", 42)
 
     print(f"=== 4) Training surrogate on {n_sims} simulations ({epochs} epochs) ===")
-    X, y = spec.build_tensor_dataset(n_sims)
+    X, y = spec.build_tensor_dataset(n_sims, **config.get("simulator_kwargs", {}))
     history = []
     body, head, X_val, y_val = train_generic_surrogate(
         body, X, y, epochs=epochs, batch_size=batch_size, seed=seed, log_prefix=f"{sim_name}/{summary_name}",
         history=history,
     )
-    _save_loss_history(history, f"workflow_{sim_name}_{summary_name}", n_sims)
+    _save_loss_history(history, f"workflow_{run_name}_{summary_name}", n_sims)
 
     # -----------------------------------------------------------------
     # 5) XAI METHOD: run the selected method against the trained surrogate.
@@ -131,7 +134,7 @@ def run_workflow(config: dict):
         raise ValueError(f"Unknown xai_method '{xai_name}'. Registered: {sorted(XAI_METHODS)}")
 
     print(f"=== 5) XAI method: {xai_name} (target={target}) ===")
-    fig_prefix = f"workflow_{sim_name}_{xai_name}"
+    fig_prefix = f"workflow_{run_name}_{xai_name}"
     result = XAI_METHODS[xai_name](
         spec, body, head, X_val, y_val, target_idx, target, fig_prefix=fig_prefix,
         **config.get("xai_kwargs", {}),

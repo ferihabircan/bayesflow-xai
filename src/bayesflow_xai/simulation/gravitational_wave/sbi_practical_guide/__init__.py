@@ -57,17 +57,23 @@ def simulate(n_sims: int, seed: int = 0, num_workers: int | None = None, chunk_s
     return thetas, xs
 
 
-def build_guide_tensor_dataset(n_sims: int, seed: int = 0):
+def build_guide_tensor_dataset(n_sims: int, seed: int = 0, normalization: str = "minmax"):
     """(n_sims) -> (X, y) torch tensors for the registry: X (n, 8192, 2)
     [H1, L1], y (n, 2) = [mass1, mass_ratio].
 
-    X is min-max normalised with one global (min, max) over the generated
-    set, like gws-split-denovo.py (norm_style="uniform") that produced the
-    notebook's gws-train.h5."""
+    normalization="minmax" (default) scales X with one global (min, max)
+    over the generated set, like gws-split-denovo.py (norm_style="uniform")
+    that produced the notebook's gws-train.h5. "zscore" uses one global
+    (mean, std) instead, like our own build_gw_tensor_dataset."""
     import torch
 
     thetas, xs = simulate(n_sims, seed=seed)
-    xs = (xs - xs.min()) / (xs.max() - xs.min())
+    if normalization == "minmax":
+        xs = (xs - xs.min()) / (xs.max() - xs.min())
+    elif normalization == "zscore":
+        xs = (xs - xs.mean()) / xs.std()
+    else:
+        raise ValueError(f"Unknown normalization '{normalization}', expected 'minmax' or 'zscore'")
     X = torch.tensor(xs.transpose(0, 2, 1), dtype=torch.float32)
     y = torch.tensor(thetas, dtype=torch.float32)
     return X, y
