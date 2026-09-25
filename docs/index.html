@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>xai</title>
+<title>bayesflow-xai</title>
 <meta name="description" content="Explainable AI for simulation-based inference: SIR, Lotka-Volterra, and Gaussian Random Field models, with Integrated Gradients, Saliency Maps, Attention Rollout, and Masking/Occlusion." />
 <style>
   :root {
@@ -78,7 +78,7 @@
     max-width: var(--maxw); margin: 0 auto; padding: 14px 20px;
     display: flex; align-items: center; justify-content: space-between; gap: 16px;
   }
-  .brand { font-family: var(--font-mono); font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
+  .brand { font-family: var(--font-mono); font-weight: 700; font-size: 15px; letter-spacing: -0.02em; white-space: nowrap; flex-shrink: 0; }
   .brand .dot { color: var(--accent); }
   .navlinks { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
   .navlinks a {
@@ -224,9 +224,13 @@
   .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
   @media (max-width: 860px) {
     .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr 1fr; }
+    .navlinks { gap: 12px; }
+    .navlinks a { font-size: 12.5px; }
   }
   @media (max-width: 560px) {
     .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
     .navlinks { display: none; }
   }
   .card {
@@ -304,7 +308,7 @@
 
 <nav class="topnav">
   <div class="topnav-inner">
-    <div class="brand"><span class="dot">&gt;</span>xai</div>
+    <div class="brand"><span class="dot">&gt;</span>bayesflow-xai</div>
     <div class="navlinks">
       <a href="#install">Install</a>
       <a href="#usage">Usage</a>
