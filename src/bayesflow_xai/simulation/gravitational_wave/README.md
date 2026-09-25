@@ -59,6 +59,9 @@ which dominates every sample. The physical chirp (a frequency sweep up to
 the whole [0, 1] range on this artefact, which is why that model learned it
 instead of the merger.
 
+Full findings, including IG vs Saliency Map vs Masking on one trained model:
+[`outputs/gravitational_wave/xai_findings_summary.md`](../../../../outputs/gravitational_wave/xai_findings_summary.md).
+
 ## What the simulator does
 
 For each `(mass1, mass2)` input, `_simulate_gw` in `simulator.py`:
