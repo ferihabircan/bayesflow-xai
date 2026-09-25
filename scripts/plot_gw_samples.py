@@ -43,7 +43,7 @@ def _envelope_peak(x, t, width=41):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--out", default="outputs/gravitational_wave/gw_samples.png")
+    parser.add_argument("--out", default="outputs/figures/gravitational_wave/gw_samples.png")
     args = parser.parse_args()
 
     xs = _simulate_chunk((THETAS, args.seed))  # (n, 2, 8192) raw whitened strain

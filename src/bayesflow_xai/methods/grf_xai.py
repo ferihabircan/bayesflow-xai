@@ -127,7 +127,8 @@ def grf_pixel_saliency_analysis(
     """Trains the CNN surrogate, computes Integrated Gradients pixel
     attribution for one validation-set field targeting `target_name`, and
     plots the original field next to the |attribution| heatmap
-    (side-by-side, same pixel grid), saved to outputs/figures/."""
+    (side-by-side, same pixel grid), saved to CONFIG.figures_dir
+    (outputs/figures/grf/ when run from scripts/run_grf_xai.py)."""
     from captum.attr import IntegratedGradients
 
     body, head, X_val, y_val = train_grf_surrogate(n_sims=n_sims, epochs=epochs, seed=seed)

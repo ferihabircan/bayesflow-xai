@@ -4,7 +4,7 @@ on the best-recovered parameter (lambd), each figure in its own window."""
 
 import matplotlib.pyplot as plt
 
-from bayesflow_xai.utils.config import CONFIG  # noqa: F401
+from bayesflow_xai.utils.config import CONFIG, use_simulator_figures_dir  # noqa: F401
 from bayesflow_xai.training.workflow import build_workflow, train_workflow
 from bayesflow_xai.diagnostics.plots import run_all_diagnostics
 from bayesflow_xai.methods.latent_space import latent_space_analysis
@@ -13,6 +13,8 @@ from bayesflow_xai.methods.integrated_gradients import (
     plot_dot_pixel_saliency_map,
 )
 from bayesflow_xai.methods.attention_rollout import attention_rollout_analysis
+
+use_simulator_figures_dir("sir")  # figures -> outputs/figures/sir/
 
 
 def main():

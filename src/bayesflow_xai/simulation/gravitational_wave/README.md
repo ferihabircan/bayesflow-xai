@@ -39,7 +39,7 @@ share of attribution still falls on the artefact region.
 
 Where the artefact comes from (traced stage by stage for one H1
 simulation, mass 40/38; see `scripts/plot_gw_samples.py` →
-`outputs/gravitational_wave/gw_samples.png`):
+`outputs/figures/gravitational_wave/gw_samples.png`):
 
 1. PyCBC's `get_td_waveform` starts the waveform below `f_lower = 20 Hz`
    (11 s before merger). The ~15–20 Hz early inspiral is physical.

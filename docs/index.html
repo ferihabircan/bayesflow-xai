@@ -365,7 +365,7 @@
     </div>
 
     <div class="demo-result">
-      <img id="demoResultImg" class="visible" src="figures/xai_02_integrated_gradients.png" alt="SIR + Integrated Gradients: channel importance" />
+      <img id="demoResultImg" class="visible" src="figures/sir/xai_02_integrated_gradients.png" alt="SIR + Integrated Gradients: channel importance" />
       <p class="demo-empty" id="demoEmpty">No result figure for this combination yet.</p>
     </div>
     <p class="demo-config" id="demoConfig"><b>simulator:</b> sir &middot; <b>xai_method:</b> integrated_gradients</p>
@@ -468,7 +468,7 @@ xai_method: integrated_gradients
       <p>Stationary Susceptible-Infected-Recovered epidemic model from the BayesFlow
       tutorial: a prior over infection/recovery dynamics, forward-simulated case
       counts observed through negative-binomial noise.</p>
-      <img src="figures/02_parameter_recovery.png" alt="SIR parameter recovery plot" loading="lazy" />
+      <img src="figures/sir/02_parameter_recovery.png" alt="SIR parameter recovery plot" loading="lazy" />
     </div>
     <div class="card">
       <span class="tag">simulator/lotka_volterra</span>
@@ -477,7 +477,7 @@ xai_method: integrated_gradients
       <p>Despite the name, a theta-parametrized sinusoidal signal with additive
       Gaussian noise (kept verbatim from the source example) -- a 2-channel
       timeseries testbed for the same XAI surrogate pipeline as SIR.</p>
-      <img src="figures/xai_lv_04_channel_time_importance_stats.png" alt="Lotka-Volterra channel/time importance stats" loading="lazy" />
+      <img src="figures/lotka_volterra/xai_lv_04_channel_time_importance_stats.png" alt="Lotka-Volterra channel/time importance stats" loading="lazy" />
     </div>
     <div class="card">
       <span class="tag">simulator/grf</span>
@@ -486,7 +486,7 @@ xai_method: integrated_gradients
       <p>BayesFlow's spatial-data example: a 64&times;64 field generated from a
       power-law spectrum. Two scenarios -- (log_std, alpha) as inference
       target, and the field itself generated via a conditional diffusion model.</p>
-      <img src="figures/grf_tutorial/32_06_real_vs_generated_fields.png" alt="GRF real vs generated fields" loading="lazy" />
+      <img src="figures/grf/grf_tutorial/32_06_real_vs_generated_fields.png" alt="GRF real vs generated fields" loading="lazy" />
     </div>
   </div>
 </section>
@@ -500,7 +500,7 @@ xai_method: integrated_gradients
       <p>Walks a straight-line path from a zero baseline to the real input,
       accumulating the output's gradient at every step, to attribute the
       prediction to each input value.</p>
-      <img src="figures/xai_02_integrated_gradients.png" alt="Integrated Gradients channel importance" loading="lazy" />
+      <img src="figures/sir/xai_02_integrated_gradients.png" alt="Integrated Gradients channel importance" loading="lazy" />
     </div>
     <div class="card">
       <span class="tag">raw gradient</span>
@@ -508,7 +508,7 @@ xai_method: integrated_gradients
       <p>The simplest XAI method: the raw gradient of the output with respect
       to the input, no baseline or path integral -- cheap, but noisier than
       Integrated Gradients.</p>
-      <img src="figures/workflow_sir_saliency_map_saliency_map.png" alt="Saliency map channel importance" loading="lazy" />
+      <img src="figures/sir/workflow_sir_saliency_map_saliency_map.png" alt="Saliency map channel importance" loading="lazy" />
     </div>
     <div class="card">
       <span class="tag">transformer</span>
@@ -516,7 +516,7 @@ xai_method: integrated_gradients
       <p>Multiplies a transformer's per-layer attention weights (mixed with a
       residual/identity term per layer) to trace how information from each
       time step flows to the output through every layer.</p>
-      <img src="figures/xai_03b_attention_connections.png" alt="Attention rollout BertViz-style connections" loading="lazy" />
+      <img src="figures/sir/xai_03b_attention_connections.png" alt="Attention rollout BertViz-style connections" loading="lazy" />
     </div>
     <div class="card">
       <span class="tag">new &middot; black-box</span>
@@ -524,7 +524,7 @@ xai_method: integrated_gradients
       <p>No gradients at all: cover part of the input (a time step, or an
       image patch) with a zero baseline and measure how much the prediction
       moves. Works even against models Captum can't differentiate through.</p>
-      <img src="figures/workflow_sir_masking_masking_time_importance.png" alt="Masking/occlusion time importance" loading="lazy" />
+      <img src="figures/sir/workflow_sir_masking_masking_time_importance.png" alt="Masking/occlusion time importance" loading="lazy" />
     </div>
   </div>
 </section>
@@ -558,11 +558,11 @@ xai_method: integrated_gradients
   </div>
   <div class="results-figs">
     <figure>
-      <img src="figures/xai_01_latent_space.png" alt="UMAP/t-SNE latent space colored by lambd" loading="lazy" />
+      <img src="figures/sir/xai_01_latent_space.png" alt="UMAP/t-SNE latent space colored by lambd" loading="lazy" />
       <figcaption>SIR summary-network latent space (UMAP/t-SNE), colored by lambd</figcaption>
     </figure>
     <figure>
-      <img src="figures/03_sbc_calibration.png" alt="SBC calibration histogram" loading="lazy" />
+      <img src="figures/sir/03_sbc_calibration.png" alt="SBC calibration histogram" loading="lazy" />
       <figcaption>Simulation-based calibration check for the trained posterior</figcaption>
     </figure>
   </div>
@@ -734,7 +734,7 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
 
     // matplotlib's "Spectral" colormap (13 sampled control points, piecewise
     // linear-interpolated) -- the same colormap scripts/run_grf_tutorial_31.py
-    // uses for outputs/figures/grf_tutorial/31_02_multi_alpha_fields.png.
+    // uses for outputs/figures/grf/grf_tutorial/31_02_multi_alpha_fields.png.
     var SPECTRAL_STOPS = [
       [158, 1, 66], [203, 51, 77], [233, 92, 71], [249, 142, 82], [253, 191, 111],
       [254, 229, 147], [255, 255, 190], [234, 247, 158], [191, 229, 160], [134, 207, 165],
@@ -847,18 +847,18 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
   (function () {
     var COMBOS = {
       sir: {
-        integrated_gradients: { img: 'figures/xai_02_integrated_gradients.png', alt: 'SIR + Integrated Gradients: channel importance' },
-        saliency_map: { img: 'figures/workflow_sir_saliency_map_saliency_map.png', alt: 'SIR + Saliency Map: channel importance' },
-        attention_rollout: { img: 'figures/xai_03b_attention_connections.png', alt: 'SIR + Attention Rollout: BertViz-style connections' },
-        masking: { img: 'figures/workflow_sir_masking_masking_time_importance.png', alt: 'SIR + Masking/Occlusion: time importance' }
+        integrated_gradients: { img: 'figures/sir/xai_02_integrated_gradients.png', alt: 'SIR + Integrated Gradients: channel importance' },
+        saliency_map: { img: 'figures/sir/workflow_sir_saliency_map_saliency_map.png', alt: 'SIR + Saliency Map: channel importance' },
+        attention_rollout: { img: 'figures/sir/xai_03b_attention_connections.png', alt: 'SIR + Attention Rollout: BertViz-style connections' },
+        masking: { img: 'figures/sir/workflow_sir_masking_masking_time_importance.png', alt: 'SIR + Masking/Occlusion: time importance' }
       },
       lotka_volterra: {
-        integrated_gradients: { img: 'figures/xai_lv_04_channel_time_importance_stats.png', alt: 'Lotka-Volterra + Integrated Gradients: channel/time importance stats' }
+        integrated_gradients: { img: 'figures/lotka_volterra/xai_lv_04_channel_time_importance_stats.png', alt: 'Lotka-Volterra + Integrated Gradients: channel/time importance stats' }
       },
       grf: {
-        integrated_gradients: { img: 'figures/workflow_grf_integrated_gradients_integrated_gradients.png', alt: 'GRF + Integrated Gradients: pixel attribution' },
-        saliency_map: { img: 'figures/workflow_grf_saliency_map_saliency_map.png', alt: 'GRF + Saliency Map: pixel map' },
-        masking: { img: 'figures/workflow_grf_masking_masking_patch_importance.png', alt: 'GRF + Masking/Occlusion: patch importance' }
+        integrated_gradients: { img: 'figures/grf/workflow_grf_integrated_gradients_integrated_gradients.png', alt: 'GRF + Integrated Gradients: pixel attribution' },
+        saliency_map: { img: 'figures/grf/workflow_grf_saliency_map_saliency_map.png', alt: 'GRF + Saliency Map: pixel map' },
+        masking: { img: 'figures/grf/workflow_grf_masking_masking_patch_importance.png', alt: 'GRF + Masking/Occlusion: patch importance' }
       }
     };
 
