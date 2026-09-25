@@ -4,15 +4,15 @@ on the best-recovered parameter (lambd), each figure in its own window."""
 
 import matplotlib.pyplot as plt
 
-from xai.utils.config import CONFIG  # noqa: F401
-from xai.training.workflow import build_workflow, train_workflow
-from xai.diagnostics.plots import run_all_diagnostics
-from xai.methods.latent_space import latent_space_analysis
-from xai.methods.integrated_gradients import (
+from bayesflow_xai.utils.config import CONFIG  # noqa: F401
+from bayesflow_xai.training.workflow import build_workflow, train_workflow
+from bayesflow_xai.diagnostics.plots import run_all_diagnostics
+from bayesflow_xai.methods.latent_space import latent_space_analysis
+from bayesflow_xai.methods.integrated_gradients import (
     integrated_gradients_analysis,
     plot_dot_pixel_saliency_map,
 )
-from xai.methods.attention_rollout import attention_rollout_analysis
+from bayesflow_xai.methods.attention_rollout import attention_rollout_analysis
 
 
 def main():

@@ -1,4 +1,4 @@
-# Human-readable mirror of xai.utils.config.Config, for reference /
+# Human-readable mirror of bayesflow_xai.utils.config.Config, for reference /
 # future extension to a YAML-driven CLI (e.g. with hydra or a simple loader).
 seed: 2026
 population_size: 83000000

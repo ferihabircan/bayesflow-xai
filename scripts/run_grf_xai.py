@@ -10,10 +10,10 @@ Usage: python scripts/run_grf_xai.py --target alpha --skip-training
 
 import argparse
 
-from xai.utils.config import CONFIG  # noqa: F401
-from xai.simulation.grf.grf_model import PARAM_NAMES
-from xai.training.grf_workflow import build_grf_workflow, train_grf_workflow
-from xai.methods.grf_xai import grf_pixel_saliency_analysis
+from bayesflow_xai.utils.config import CONFIG  # noqa: F401
+from bayesflow_xai.simulation.grf.grf_model import PARAM_NAMES
+from bayesflow_xai.training.grf_workflow import build_grf_workflow, train_grf_workflow
+from bayesflow_xai.methods.grf_xai import grf_pixel_saliency_analysis
 
 
 def main(

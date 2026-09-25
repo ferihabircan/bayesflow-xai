@@ -2,27 +2,27 @@
 """Single config-driven entry point for the whole project: pick a
 simulator, a summary network, an inference network, a target parameter,
 and an XAI method in a YAML file, and this script runs the pipeline end
-to end by looking each name up in the xai.registry.
+to end by looking each name up in the bayesflow_xai.registry.
 
 Usage:
     python scripts/run_workflow.py --config configs/workflow_example.yaml
 
 To add your own simulator / summary network / XAI method, see the
-docstrings in xai/registry.py and xai/registrations.py, then
+docstrings in bayesflow_xai/registry.py and bayesflow_xai/registrations.py, then
 either add your registration to registrations.py or import your own
 module before this script's registry lookups run (e.g. by editing the
-`import xai.registrations` line below to also import your module).
+`import bayesflow_xai.registrations` line below to also import your module).
 """
 
 import argparse
 
 import yaml
 
-# Populates xai.registry's SIMULATORS / SUMMARY_NETWORKS /
+# Populates bayesflow_xai.registry's SIMULATORS / SUMMARY_NETWORKS /
 # INFERENCE_NETWORKS / XAI_METHODS dicts. Must happen before any lookup.
-import xai.registrations  # noqa: F401
-from xai.registry import SIMULATORS, SIMULATOR_TARGETS, SUMMARY_NETWORKS, INFERENCE_NETWORKS, XAI_METHODS
-from xai.methods.generic_surrogate import train_generic_surrogate
+import bayesflow_xai.registrations  # noqa: F401
+from bayesflow_xai.registry import SIMULATORS, SIMULATOR_TARGETS, SUMMARY_NETWORKS, INFERENCE_NETWORKS, XAI_METHODS
+from bayesflow_xai.methods.generic_surrogate import train_generic_surrogate
 
 
 def _load_config(path: str) -> dict:

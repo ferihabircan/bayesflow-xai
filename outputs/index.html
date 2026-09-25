@@ -397,7 +397,7 @@
       <p style="color:var(--fg);margin-bottom:8px;">Set your GPU / backend (copy the example env file)</p>
       <div class="code"><pre><span class="prompt">$</span> cp .env.example .env
 <span class="c1"># .env sets KERAS_BACKEND=torch and CUDA_VISIBLE_DEVICES=&lt;your GPU index&gt;
-# note: src/xai/utils/config.py sets a default at import time --
+# note: src/bayesflow_xai/utils/config.py sets a default at import time --
 # check that default matches an idle GPU on a shared machine before running.</span></pre></div>
     </li>
   </ol>
@@ -425,8 +425,8 @@
   </div>
 
   <div class="tab-panel" data-panel="python">
-    <div class="code"><pre><span class="c1"># registering your own simulator (see xai/registry.py for the full docstring)</span>
-<span class="prompt">from</span> xai.registry <span class="prompt">import</span> register_simulator, SimulatorSpec
+    <div class="code"><pre><span class="c1"># registering your own simulator (see bayesflow_xai/registry.py for the full docstring)</span>
+<span class="prompt">from</span> bayesflow_xai.registry <span class="prompt">import</span> register_simulator, SimulatorSpec
 
 <span class="c1">@register_simulator("my_sim", targets=["theta"])</span>
 <span class="prompt">def</span> build_my_sim_spec() -> SimulatorSpec:
@@ -459,7 +459,7 @@ xai_method: integrated_gradients
   <div class="grid cols-3">
     <div class="card">
       <span class="tag">simulator/sir</span>
-      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/tree/main/src/xai/simulation/sir" target="_blank" rel="noopener">SIR</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/tree/main/src/bayesflow_xai/simulation/sir" target="_blank" rel="noopener">SIR</a></h3>
       <span class="targets">lambd &middot; mu &middot; D &middot; I0 &middot; psi</span>
       <p>Stationary Susceptible-Infected-Recovered epidemic model from the BayesFlow
       tutorial: a prior over infection/recovery dynamics, forward-simulated case
@@ -468,7 +468,7 @@ xai_method: integrated_gradients
     </div>
     <div class="card">
       <span class="tag">simulator/lotka_volterra</span>
-      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/tree/main/src/xai/simulation/lotka_volterra" target="_blank" rel="noopener">Lotka-Volterra</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/tree/main/src/bayesflow_xai/simulation/lotka_volterra" target="_blank" rel="noopener">Lotka-Volterra</a></h3>
       <span class="targets">theta0 &middot; theta1 &middot; theta2</span>
       <p>Despite the name, a theta-parametrized sinusoidal signal with additive
       Gaussian noise (kept verbatim from the source example) -- a 2-channel
@@ -477,7 +477,7 @@ xai_method: integrated_gradients
     </div>
     <div class="card">
       <span class="tag">simulator/grf</span>
-      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/tree/main/src/xai/simulation/grf" target="_blank" rel="noopener">Gaussian Random Field</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/tree/main/src/bayesflow_xai/simulation/grf" target="_blank" rel="noopener">Gaussian Random Field</a></h3>
       <span class="targets">log_std &middot; alpha</span>
       <p>BayesFlow's spatial-data example: a 64&times;64 field generated from a
       power-law spectrum. Two scenarios -- (log_std, alpha) as inference
@@ -492,7 +492,7 @@ xai_method: integrated_gradients
   <div class="grid cols-4">
     <div class="card">
       <span class="tag">gradient path</span>
-      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/xai/methods/integrated_gradients.py" target="_blank" rel="noopener">Integrated Gradients</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/bayesflow_xai/methods/integrated_gradients.py" target="_blank" rel="noopener">Integrated Gradients</a></h3>
       <p>Walks a straight-line path from a zero baseline to the real input,
       accumulating the output's gradient at every step, to attribute the
       prediction to each input value.</p>
@@ -500,7 +500,7 @@ xai_method: integrated_gradients
     </div>
     <div class="card">
       <span class="tag">raw gradient</span>
-      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/xai/methods/saliency_map.py" target="_blank" rel="noopener">Saliency Map</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/bayesflow_xai/methods/saliency_map.py" target="_blank" rel="noopener">Saliency Map</a></h3>
       <p>The simplest XAI method: the raw gradient of the output with respect
       to the input, no baseline or path integral -- cheap, but noisier than
       Integrated Gradients.</p>
@@ -508,7 +508,7 @@ xai_method: integrated_gradients
     </div>
     <div class="card">
       <span class="tag">transformer</span>
-      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/xai/methods/attention_rollout.py" target="_blank" rel="noopener">Attention Rollout</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/bayesflow_xai/methods/attention_rollout.py" target="_blank" rel="noopener">Attention Rollout</a></h3>
       <p>Multiplies a transformer's per-layer attention weights (mixed with a
       residual/identity term per layer) to trace how information from each
       time step flows to the output through every layer.</p>
@@ -516,7 +516,7 @@ xai_method: integrated_gradients
     </div>
     <div class="card">
       <span class="tag">new &middot; black-box</span>
-      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/xai/methods/masking.py" target="_blank" rel="noopener">Masking / Occlusion</a></h3>
+      <h3><a href="https://github.com/ferihabircan/bayesflow-xai/blob/main/src/bayesflow_xai/methods/masking.py" target="_blank" rel="noopener">Masking / Occlusion</a></h3>
       <p>No gradients at all: cover part of the input (a time step, or an
       image patch) with a zero baseline and measure how much the prediction
       moves. Works even against models Captum can't differentiate through.</p>
@@ -569,17 +569,17 @@ xai_method: integrated_gradients
 
   <h3>Add your own simulator or XAI method</h3>
   <p>Everything selectable from a config lives in one registry
-  (<code>src/xai/registry.py</code>) populated by
-  <code>src/xai/registrations.py</code>. Registering something new is a
+  (<code>src/bayesflow_xai/registry.py</code>) populated by
+  <code>src/bayesflow_xai/registrations.py</code>. Registering something new is a
   decorator, in your own module:</p>
   <div class="code"><pre><span class="c1"># my_lab/my_xai_method.py</span>
-<span class="prompt">from</span> xai.registry <span class="prompt">import</span> register_xai_method
+<span class="prompt">from</span> bayesflow_xai.registry <span class="prompt">import</span> register_xai_method
 
 <span class="c1">@register_xai_method("my_method")</span>
 <span class="prompt">def</span> my_method(spec, body, head, X_val, y_val, target_idx, target_name, fig_prefix, **kwargs):
     <span class="c1"># spec: SimulatorSpec (input_kind, channel_names / field_shape, ...)
     # body/head: trained surrogate -- head(body(x)) -> target predictions
-    # return whatever you plot; xai.utils.plotting.show_and_save()
+    # return whatever you plot; bayesflow_xai.utils.plotting.show_and_save()
     # saves figures the same way every other method does.</span>
     ...</pre></div>
   <p>Import your module once (e.g. at the top of your own copy of
@@ -588,7 +588,7 @@ xai_method: integrated_gradients
   lookup -- then reference it by name from any workflow <code>.yaml</code>.</p>
 
   <h3 style="margin-top:28px;">Project layout</h3>
-  <div class="code tree"><pre>src/xai/
+  <div class="code tree"><pre>src/bayesflow_xai/
   registry.py            <span class="c1"># SIMULATORS / SUMMARY_NETWORKS / INFERENCE_NETWORKS / XAI_METHODS</span>
   registrations.py        <span class="c1"># built-in registrations (import this to populate the registry)</span>
   simulation/
@@ -638,7 +638,7 @@ outputs/                  <span class="c1"># figures/, models/, logs/ (gitignore
   });
 
   // ---------- hero GRF field generator ----------
-  // Mirrors src/xai/simulation/grf/grf_model.py's generate_power_spectrum(alpha, scale)
+  // Mirrors src/bayesflow_xai/simulation/grf/grf_model.py's generate_power_spectrum(alpha, scale)
   // + FyeldGenerator.generate_field: complex Gaussian noise in Fourier space,
   // amplitude-scaled by k^(-alpha/2), inverse 2D-FFT'd, real part taken as the field.
   // Rendered as a colored canvas (matplotlib "Spectral" colormap, same as
