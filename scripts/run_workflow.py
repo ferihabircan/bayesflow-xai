@@ -29,7 +29,7 @@ import yaml
 import bayesflow_xai.registrations  # noqa: F401
 from bayesflow_xai.registry import SIMULATORS, SIMULATOR_TARGETS, SUMMARY_NETWORKS, INFERENCE_NETWORKS, XAI_METHODS
 from bayesflow_xai.methods.generic_surrogate import train_generic_surrogate
-from bayesflow_xai.utils.config import CONFIG
+from bayesflow_xai.utils.config import CONFIG, use_simulator_figures_dir
 
 
 def _load_config(path: str) -> dict:
@@ -41,7 +41,7 @@ def _save_loss_history(history, prefix: str, n_sims: int):
     """Writes per-epoch (train, val) MSE to outputs/<prefix>_loss.npz and
     plots it to outputs/figures/<prefix>_loss.png."""
     epoch, train, val = (np.array(c) for c in zip(*history))
-    np.savez(os.path.join(os.path.dirname(CONFIG.figures_dir), f"{prefix}_loss.npz"), epoch=epoch, train=train, val=val)
+    np.savez(os.path.join(CONFIG.outputs_dir, f"{prefix}_loss.npz"), epoch=epoch, train=train, val=val)
 
     fig, ax = plt.subplots(figsize=(7, 4))
     ax.plot(epoch, train, label="train")
@@ -53,6 +53,7 @@ def _save_loss_history(history, prefix: str, n_sims: int):
     ax.legend()
     ax.grid(alpha=0.3)
     fig.tight_layout()
+    os.makedirs(CONFIG.figures_dir, exist_ok=True)
     path = os.path.join(CONFIG.figures_dir, f"{prefix}_loss.png")
     fig.savefig(path, dpi=150)
     plt.close(fig)
@@ -81,6 +82,7 @@ def run_workflow(config: dict):
     # Optional run_tag keeps outputs of config variants (e.g. a different
     # normalisation) from overwriting each other.
     run_name = sim_name + (f"_{config['run_tag']}" if config.get("run_tag") else "")
+    use_simulator_figures_dir(sim_name)
     target_idx = spec.param_names.index(target)
 
     # -----------------------------------------------------------------
@@ -140,7 +142,7 @@ def run_workflow(config: dict):
         **config.get("xai_kwargs", {}),
     )
 
-    print(f"\nDone. Figure(s) saved under outputs/figures/{fig_prefix}_*.png")
+    print(f"\nDone. Figure(s) saved under {CONFIG.figures_dir}/{fig_prefix}_*.png")
     return result
 
 

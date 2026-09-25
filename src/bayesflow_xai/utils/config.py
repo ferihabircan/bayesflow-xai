@@ -91,6 +91,9 @@ class Config:
     xai_surrogate_n_sims: int = 6000
     xai_transformer_n_sims: int = 4000
 
+    outputs_dir: str = "outputs"  # .npz results, logs, models
+    # Scripts point this at outputs/figures/<simulator> (see
+    # figures_dir_for) so each simulator's figures get their own folder.
     figures_dir: str = "outputs/figures"
     models_dir: str = "outputs/models"
     logs_dir: str = "outputs/logs"
@@ -98,3 +101,18 @@ class Config:
 
 CONFIG = Config()
 PARAM_NAMES = ["lambd", "mu", "D", "I0", "psi"]
+
+
+def figures_dir_for(simulator: str) -> str:
+    """outputs/figures/<simulator>: one figure folder per simulator
+    (sir, lotka_volterra, grf, gravitational_wave)."""
+    return os.path.join(CONFIG.outputs_dir, "figures", simulator)
+
+
+def use_simulator_figures_dir(simulator: str) -> str:
+    """Points CONFIG.figures_dir (and so every show_and_save call) at
+    outputs/figures/<simulator>. CONFIG is frozen; this is the one
+    sanctioned way to change it, called once at the top of a script."""
+    path = figures_dir_for(simulator)
+    object.__setattr__(CONFIG, "figures_dir", path)
+    return path

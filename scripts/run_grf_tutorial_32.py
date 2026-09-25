@@ -27,7 +27,7 @@ import numpy as np
 import bayesflow as bf
 from FyeldGenerator import generate_field
 
-from bayesflow_xai.utils.config import CONFIG
+from bayesflow_xai.utils.config import CONFIG, use_simulator_figures_dir
 from bayesflow_xai.simulation.grf.grf_model import generate_power_spectrum, FIELD_SHAPE
 from bayesflow_xai.simulation.grf.grf_model import distribution as original_distribution
 from bayesflow_xai.simulation.grf.grf_model import build_grf_simulator
@@ -39,6 +39,8 @@ from bayesflow_xai.training.grf_diffusion_workflow import (
     build_grf_diffusion_workflow,
     train_grf_diffusion_workflow,
 )
+
+use_simulator_figures_dir("grf")  # figures -> outputs/figures/grf/
 
 FIGURES_DIR = Path(CONFIG.figures_dir) / "grf_tutorial"
 

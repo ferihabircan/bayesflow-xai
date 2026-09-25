@@ -15,7 +15,7 @@ Pass several --npz/--label pairs to compare runs or methods, one row each:
     python scripts/plot_gw_ig_time.py \\
         --npz outputs/workflow_gravitational_wave_integrated_gradients_integrated_gradients.npz --label min-max \\
         --npz outputs/workflow_gravitational_wave_zscore_integrated_gradients_integrated_gradients.npz --label z-score \\
-        --out outputs/figures/gw_ig_time_comparison.png
+        --out outputs/figures/gravitational_wave/gw_ig_time_comparison.png
 
 The simulator aligns every sample so the H1 merger is at t = 0
 (seconds_before_event = 3.5 s into the window), which makes attributions
@@ -137,7 +137,7 @@ def main():
     parser.add_argument("--npz", action="append", help="attribution .npz (repeatable)")
     parser.add_argument("--label", action="append", help="row label per --npz")
     parser.add_argument("--target", default="mass1")
-    parser.add_argument("--out", default="outputs/figures/workflow_gravitational_wave_integrated_gradients_time.png")
+    parser.add_argument("--out", default="outputs/figures/gravitational_wave/workflow_gravitational_wave_integrated_gradients_time.png")
     args = parser.parse_args()
 
     paths = args.npz or [DEFAULT_NPZ]

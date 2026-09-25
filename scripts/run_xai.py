@@ -5,7 +5,7 @@ Usage: python scripts/run_xai.py --target lambd
 
 import argparse
 
-from bayesflow_xai.utils.config import CONFIG  # noqa: F401
+from bayesflow_xai.utils.config import CONFIG, use_simulator_figures_dir  # noqa: F401
 from bayesflow_xai.training.workflow import build_workflow, train_workflow
 from bayesflow_xai.methods.latent_space import latent_space_analysis
 from bayesflow_xai.methods.integrated_gradients import (
@@ -16,6 +16,8 @@ from bayesflow_xai.methods.integrated_gradients import (
 )
 from bayesflow_xai.methods.attention_rollout import attention_rollout_analysis
 from bayesflow_xai.utils.config import PARAM_NAMES
+
+use_simulator_figures_dir("sir")  # figures -> outputs/figures/sir/
 
 
 def main(target: str, skip_training: bool = False, sample_index: int = 0,
@@ -69,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument("--all-samples", action="store_true",
                          help="render the dot-pixel saliency map for the first N validation samples "
                               "(instead of one randomly-found outbreak sample), saved to "
-                              "outputs/figures/saliency_samples/")
+                              "outputs/figures/sir/saliency_samples/")
     parser.add_argument("--n-samples-plot", type=int, default=10,
                          help="number of validation samples to plot with --all-samples (default: 10)")
     args = parser.parse_args()

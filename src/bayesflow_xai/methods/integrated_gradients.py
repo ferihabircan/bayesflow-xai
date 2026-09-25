@@ -248,11 +248,12 @@ def plot_dot_pixel_saliency_for_all_samples(
     pixel-weighted dot saliency below), but instead of hunting for a single
     random "real outbreak" sample, renders one figure per sample for the
     first `n_samples` validation-set trajectories (X_val[:n_samples]) and
-    saves each to outputs/figures/saliency_samples/sample_XX.png."""
+    saves each to <CONFIG.figures_dir>/saliency_samples/sample_XX.png
+    (outputs/figures/sir/saliency_samples/ when run from scripts/run_xai.py)."""
     inputs, attributions, _ = _compute_ig_attributions(target_idx, n_samples=n_samples)
     n = attributions.shape[0]  # actual count, capped by available val data
 
-    output_dir = os.path.join("outputs", "figures", "saliency_samples")
+    output_dir = os.path.join(CONFIG.figures_dir, "saliency_samples")
     os.makedirs(output_dir, exist_ok=True)
 
     saved_paths = []
@@ -439,7 +440,7 @@ def integrated_gradients_generic(
         f"mean |convergence delta|: {delta.abs().mean().item():.4f} (mean |f(x) - f(baseline)|: {output_diff:.4f})"
     )
     if save_attributions:
-        path = os.path.join(os.path.dirname(CONFIG.figures_dir), f"{fig_prefix}_integrated_gradients.npz")
+        path = os.path.join(CONFIG.outputs_dir, f"{fig_prefix}_integrated_gradients.npz")
         np.savez_compressed(
             path, inputs=X_val[:n].detach().cpu().numpy(), attributions=attributions,
             y_val=y_val[:n].detach().cpu().numpy(), target_idx=target_idx, delta=delta.detach().cpu().numpy(),

@@ -11,10 +11,12 @@ Usage: python scripts/run_lv_xai.py --target theta0 --stats --n-stats-samples 20
 
 import argparse
 
-from bayesflow_xai.utils.config import CONFIG  # noqa: F401
+from bayesflow_xai.utils.config import CONFIG, use_simulator_figures_dir  # noqa: F401
 from bayesflow_xai.simulation.lotka_volterra.lotka_volterra_model import PARAM_NAMES, CHANNEL_NAMES
 from bayesflow_xai.methods.surrogate_models import train_lv_surrogate
 from bayesflow_xai.methods.integrated_gradients import compute_channel_and_time_importance_stats
+
+use_simulator_figures_dir("lotka_volterra")  # figures -> outputs/figures/lotka_volterra/
 
 
 def main(target: str, run_stats: bool = False, n_stats_samples: int = 200, n_surrogate_sims: int = 6000):
