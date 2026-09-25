@@ -8,7 +8,7 @@ With kernel_size=2 and dilations 1, 2, ..., 2**(nlayers-1), the unpadded
 dilated stack shrinks the sequence by 2**nlayers - 1 samples, so the
 default nlayers=13 needs at least 8192 = 2**13 input samples and maps
 exactly 8192 samples to 1 -> output (batch, nfinal_channels) = (batch, 16).
-simulator.py's dataset window (3.5 s + 0.5 s at 2048 Hz) is sized for this.
+The simulator's window (3.5 s + 0.5 s at 2048 Hz = 8192 samples) is sized for this.
 
 `GWPaperCNNSummaryNet` (below the verbatim block) is the project-side
 adapter only: it transposes the registry's (batch, T, channels) layout to

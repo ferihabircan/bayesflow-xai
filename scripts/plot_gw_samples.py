@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """Visual sanity check of the vendored original gravitational-wave simulator
-(gravitational_wave_guide): simulates a few (mass1, mass_ratio) pairs and
+(gravitational_wave, from sbi-dev/sbi-practical-guide): simulates a few (mass1, mass_ratio) pairs and
 plots raw H1/L1 whitened strain, a zoom on the merger and a spectrogram, and
 prints chirp checks (frequency rising towards merger, amplitude peak near
 t = 0). CPU only and a handful of simulations, so it can run next to a
 training job:
 
-    python scripts/plot_gw_guide_samples.py
+    python scripts/plot_gw_samples.py
 """
 
 import argparse
@@ -21,10 +21,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import spectrogram
 
+from bayesflow_xai.simulation.gravitational_wave import CHANNEL_NAMES, SAMPLING_RATE, SECONDS_BEFORE_EVENT
 from bayesflow_xai.simulation.gravitational_wave.sbi_practical_guide import _simulate_chunk
-from bayesflow_xai.simulation.gravitational_wave.simulator import CHANNEL_NAMES, SAMPLING_RATE, SECONDS_BEFORE_EVENT
 
-# (mass1, mass_ratio) spanning the guide's prior U(40, 80) x U(0.25, 0.99).
+# (mass1, mass_ratio) spanning the original prior U(40, 80) x U(0.25, 0.99).
 THETAS = np.array([[40.0, 0.95], [55.0, 0.60], [70.0, 0.40], [80.0, 0.25]])
 # Windows (s, relative to the H1 merger) for the zero-crossing frequency estimate.
 FREQ_WINDOWS = [(-1.0, -0.8), (-0.5, -0.4), (-0.2, -0.15), (-0.08, -0.05), (-0.04, -0.01)]
@@ -43,7 +43,7 @@ def _envelope_peak(x, t, width=41):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--out", default="outputs/gravitational_wave_guide/guide_samples.png")
+    parser.add_argument("--out", default="outputs/gravitational_wave/gw_samples.png")
     args = parser.parse_args()
 
     xs = _simulate_chunk((THETAS, args.seed))  # (n, 2, 8192) raw whitened strain
@@ -92,7 +92,7 @@ def main():
     for ax in axes[-1]:
         ax.set_xlabel("time relative to H1 merger [s]")
 
-    fig.suptitle("gravitational_wave_guide (original GravitationalWaveBenchmarkSimulator): raw whitened strain", y=1.0)
+    fig.suptitle("gravitational_wave (original GravitationalWaveBenchmarkSimulator, sbi-practical-guide): raw whitened strain", y=1.0)
     fig.tight_layout()
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     fig.savefig(args.out, dpi=130, bbox_inches="tight")
