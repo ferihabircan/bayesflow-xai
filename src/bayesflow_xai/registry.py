@@ -7,7 +7,7 @@ no changes to the workflow runner are needed to add a new option.
 
 The registries are populated by *importing* the module that calls the
 decorators below -- `bayesflow_xai.registrations` does this for the project's
-3 built-in simulators, 3 summary networks, 1 inference network, and 4 XAI
+4 built-in simulators, 4 summary networks, 1 inference network, and 4 XAI
 methods. `scripts/run_workflow.py` imports it before doing any lookup.
 
 Adding your own simulator
