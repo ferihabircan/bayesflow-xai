@@ -1,0 +1,23 @@
+# Config-driven workflow: gravitational wave (PyCBC IMRPhenomPv2, real H1/L1
+# antenna pattern) + PaperEmbedding CNN + Integrated Gradients (see
+# configs/workflow_example.yaml for the full field-by-field docs).
+simulator: gravitational_wave
+summary_network: gw_paper_cnn
+inference_network: coupling_flow
+target: mass1          # or mass_ratio
+xai_method: integrated_gradients
+
+n_sims: 5000
+epochs: 40
+batch_size: 32
+seed: 42
+
+# Forwarded to the XAI method. Each input is (8192, 2); Captum expands every
+# sample into n_steps (default 50) interpolation points, so the batch has to
+# be chunked to fit on an 11 GB GPU.
+xai_kwargs:
+  n_samples: 64
+  internal_batch_size: 64
+  save_attributions: true
+  n_steps: 200         # Captum default 50 left mean |delta| ~0.6 on this model
+  baseline: median     # = zero-strain level for both z-score and min-max data

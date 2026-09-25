@@ -82,10 +82,13 @@ def train_generic_surrogate(
     seed: int = 42,
     lr: float = 1e-3,
     log_prefix: str = "surrogate",
+    history: list | None = None,
 ):
     """Trains `body` + a linear head to regress y from X. Shared training
     loop for every registry-driven summary network (extracted from the
     near-identical loops in methods/surrogate_models.py and methods/grf_xai.py).
+    If `history` is a list, a (epoch, train_loss, val_loss) tuple is appended
+    to it after every epoch (costs one extra validation pass per epoch).
     Returns (body, head, X_val, y_val)."""
     set_seed(seed)
 
@@ -115,12 +118,16 @@ def train_generic_surrogate(
                 loss.backward()
                 opt.step()
                 epoch_loss += loss.item()
-            if (epoch + 1) % log_every == 0 or epoch == epochs - 1:
+            should_log = (epoch + 1) % log_every == 0 or epoch == epochs - 1
+            if should_log or history is not None:
                 body.eval()
                 head.eval()
                 with torch.no_grad():
                     val_loss = loss_fn(head(body(X_val)), y_val).item()
-                print(f"  [{log_prefix}] epoch {epoch + 1}: train={epoch_loss / n_batches:.4f} val={val_loss:.4f}")
+                if history is not None:
+                    history.append((epoch + 1, epoch_loss / n_batches, val_loss))
+                if should_log:
+                    print(f"  [{log_prefix}] epoch {epoch + 1}: train={epoch_loss / n_batches:.4f} val={val_loss:.4f}")
                 body.train()
                 head.train()
 

@@ -392,11 +392,24 @@ def integrated_gradients_generic(
     target_name: str,
     fig_prefix: str = "workflow",
     n_samples: int | None = None,
+    internal_batch_size: int | None = None,
+    save_attributions: bool = False,
+    n_steps: int = 50,
+    baseline: str = "zeros",
 ):
     """Simulator-agnostic Integrated Gradients: works for any registered
     `SimulatorSpec` (see bayesflow_xai.registry), timeseries or image, given an
     already-trained (body, head) surrogate. Used by
-    XAI_METHODS["integrated_gradients"] (see bayesflow_xai.registrations)."""
+    XAI_METHODS["integrated_gradients"] (see bayesflow_xai.registrations).
+
+    `internal_batch_size` is forwarded to Captum (bounds GPU memory for long
+    inputs, e.g. 8192-step gravitational-wave series). `save_attributions`
+    also writes inputs/attributions/y_val to
+    outputs/<fig_prefix>_integrated_gradients.npz for follow-up analysis.
+
+    `baseline="median"` uses the median input value (one scalar) instead of
+    0. Use it when 0 is not the "no signal" level of the normalised data,
+    e.g. min-max-scaled strain, where zero strain sits near 0.5."""
     from captum.attr import IntegratedGradients
     from bayesflow_xai.methods.generic_surrogate import TargetWrapper
 
@@ -405,12 +418,34 @@ def integrated_gradients_generic(
 
     n = len(X_val) if n_samples is None else min(n_samples, len(X_val))
     inputs = X_val[:n].clone().requires_grad_(True)
-    baseline = torch.zeros_like(inputs)
+    if baseline == "zeros":
+        baseline_value = 0.0
+    elif baseline == "median":
+        baseline_value = inputs.detach().median().item()
+    else:
+        raise ValueError(f"Unknown baseline '{baseline}', expected 'zeros' or 'median'")
+    baselines = torch.full_like(inputs, baseline_value)
     ig = IntegratedGradients(model)
     with torch.enable_grad(), torch.backends.cudnn.flags(enabled=False):
-        attributions, delta = ig.attribute(inputs, baseline, return_convergence_delta=True)
+        attributions, delta = ig.attribute(
+            inputs, baselines, n_steps=n_steps, return_convergence_delta=True,
+            internal_batch_size=internal_batch_size,
+        )
     attributions = attributions.detach().cpu().numpy()
-    print(f"[integrated_gradients] mean convergence delta: {delta.abs().mean().item():.4f}")
+    with torch.no_grad():
+        output_diff = (model(inputs) - model(baselines)).abs().mean().item()
+    print(
+        f"[integrated_gradients] baseline={baseline} ({baseline_value:.4g}), n_steps={n_steps}, "
+        f"mean |convergence delta|: {delta.abs().mean().item():.4f} (mean |f(x) - f(baseline)|: {output_diff:.4f})"
+    )
+    if save_attributions:
+        path = os.path.join(os.path.dirname(CONFIG.figures_dir), f"{fig_prefix}_integrated_gradients.npz")
+        np.savez_compressed(
+            path, inputs=X_val[:n].detach().cpu().numpy(), attributions=attributions,
+            y_val=y_val[:n].detach().cpu().numpy(), target_idx=target_idx, delta=delta.detach().cpu().numpy(),
+            baseline_value=baseline_value, n_steps=n_steps,
+        )
+        print(f"[integrated_gradients] saved attributions to {path}")
 
     abs_attr = np.abs(attributions)
     if spec.input_kind == "timeseries":
