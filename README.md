@@ -1,4 +1,4 @@
-# xai
+# bayesflow-xai
 
 Explainable AI for BayesFlow simulation-based inference. Three simulators
 (SIR epidemic model, a Lotka-Volterra-style example, Gaussian Random
@@ -100,7 +100,7 @@ This started as a research internship project. If it's useful to you, a
 mention is appreciated but not required:
 
 ```
-Feriha Bircan, "xai: Explainable AI for BayesFlow simulation-based inference" (2026).
+Feriha Bircan, "bayesflow-xai: Explainable AI for BayesFlow simulation-based inference" (2026).
 https://github.com/ferihabircan/bayesflow-xai
 ```
 
