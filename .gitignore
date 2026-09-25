@@ -6,3 +6,4 @@ outputs/*
 .env
 .vscode/
 *.egg-info/
+notebooks/4_1_grav_waves.ipynb
