@@ -9,7 +9,7 @@ through one plugin registry, so a new simulator or XAI method is a
 decorator away.
 
 - **Project page:** <https://ferihabircan.github.io/bayesflow-xai/> (source: [`docs/index.html`](docs/index.html))
-- **Write-up:** [`paper/paper.md`](paper/paper.md) ([PDF](paper/paper.pdf))
+- **Paper:** [`paper/paper.pdf`](paper/paper.pdf) (LaTeX source: [`paper/paper.tex`](paper/paper.tex), build with `tectonic paper/paper.tex`)
 - **Gravitational-wave findings:** [`outputs/gravitational_wave/xai_findings_summary.md`](outputs/gravitational_wave/xai_findings_summary.md)
 
 ## What is explained, exactly
@@ -50,7 +50,7 @@ posterior.
 | `tests/` | unit tests (`pytest`) |
 | `outputs/` | generated figures and findings; `outputs/figures/<simulator>/` holds the figures shown on the project page |
 | `docs/` | GitHub Pages project page (+ a copy of the figures it shows) |
-| `paper/` | paper-style write-up (Markdown + PDF) |
+| `paper/` | paper-style write-up (LaTeX source + PDF; `docs/paper.pdf` is a copy for the project page) |
 
 Each folder above has its own short README with more detail.
 

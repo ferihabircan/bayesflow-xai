@@ -187,6 +187,62 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
 .lightbox.open { display: flex; }
 .lightbox img { max-width: 100%; max-height: 100%; background: #fff; border-radius: 6px; padding: 8px; }
 
+
+/* hero visual + stats */
+.hero { position: relative; overflow: hidden; }
+.hero::before { content: ""; position: absolute; inset: -40% -10% auto; height: 120%; background: radial-gradient(60% 50% at 50% 0%, var(--accent-soft), transparent 70%); pointer-events: none; z-index: 0; }
+.hero .wrap { position: relative; z-index: 1; }
+.hero h1 { animation: rise .9s cubic-bezier(.2,.7,.2,1) both; }
+.hero .eyebrow { animation: rise .9s .05s cubic-bezier(.2,.7,.2,1) both; }
+.hero .authors, .hero .affil { animation: rise .9s .15s cubic-bezier(.2,.7,.2,1) both; }
+.hero .btns { animation: rise .9s .25s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.btn { transition: transform .15s ease, box-shadow .15s ease; }
+.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+.hero-visual { margin: 38px auto 0; max-width: 940px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 18px 10px; box-shadow: var(--shadow); text-align: left; }
+.hv-head { display: flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--muted); font-family: var(--mono); flex-wrap: wrap; }
+.hv-dot { width: 8px; height: 8px; border-radius: 50%; background: #e0563b; box-shadow: 0 0 0 0 rgba(224,86,59,.6); animation: pulse 1.8s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(224,86,59,0); } 100% { box-shadow: 0 0 0 0 rgba(224,86,59,0); } }
+.hv-legend { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+.hv-legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-left: 6px; }
+.lg-h1 { background: #3b7dd8; } .lg-l1 { background: #f08a24; } .lg-attr { background: #e0563b; height: 8px !important; opacity: .35; }
+#heroWave { width: 100%; height: 170px; display: block; margin-top: 6px; }
+.hv-axis { position: relative; height: 18px; font-family: var(--mono); font-size: .72rem; color: var(--faint); }
+.hv-axis span { position: absolute; top: 0; }
+.hv-axis span:nth-child(1) { left: 0; }
+.hv-axis span:nth-child(2) { left: 90.9%; transform: translateX(-50%); color: var(--text); }
+.hv-axis span:nth-child(3) { right: 0; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; max-width: 940px; margin: 18px auto 0; text-align: left; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s; }
+.stat:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--accent); }
+.stat-num { font-family: var(--serif); font-size: 2rem; font-weight: 700; color: var(--accent); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat-num small { font-size: 1.05rem; color: var(--muted); margin: 0 4px; font-weight: 600; }
+.stat-label { font-size: .84rem; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+/* scroll reveal */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+.card, figure.fig .frame { transition: transform .2s ease, box-shadow .2s ease, border-color .2s; }
+.card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--accent); }
+figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent); }
+.panel.active { animation: fadeIn .45s ease both; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.tab { transition: background .2s, color .2s, border-color .2s; }
+.lightbox.open img { animation: zoomIn .25s ease both; }
+@keyframes zoomIn { from { transform: scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.progress { position: fixed; top: 0; left: 0; height: 2px; width: 0; background: var(--accent); z-index: 30; }
+
+/* animated pipeline */
+.diagram .arrow { stroke-dasharray: 5 5; animation: flow 1.2s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -20; } }
+.diagram .pulse-a { fill: var(--accent); } .diagram .pulse-w { fill: var(--warn); }
+
+@media (max-width: 900px) { .stats { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { #heroWave { height: 120px; } .hv-legend { margin-left: 0; } .stat-num { font-size: 1.6rem; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
+}
 @media (max-width: 900px) {
   .teaser { grid-template-columns: 1fr 1fr; }
   .grid4 { grid-template-columns: 1fr 1fr; }
@@ -205,7 +261,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
   .nav-links { display: none; }
   .icon-btn { margin-left: auto; }
 }
-@media print { .nav, .lightbox, .icon-btn { display: none !important; } section { break-inside: avoid; } }
+@media print { .nav, .lightbox, .icon-btn, .progress { display: none !important; } section { break-inside: avoid; } .reveal { opacity: 1 !important; transform: none !important; } }
 </style>
 <script>
   (function () {
@@ -215,6 +271,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
 </head>
 <body>
 
+<div class="progress" id="progress"></div>
 <nav class="nav" aria-label="Sections">
   <div class="wrap">
     <a class="brand" href="#top">bayesflow-xai</a>
@@ -244,9 +301,9 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.29-1.69-1.29-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
         Code
       </a>
-      <a class="btn secondary" href="https://github.com/ferihabircan/bayesflow-xai/blob/main/paper/paper.pdf">
+      <a class="btn secondary" href="paper.pdf">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
-        Write-up (PDF)
+        Paper (PDF)
       </a>
       <a class="btn secondary" href="#results-gw">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l3-8 4 16 3-8h7"/></svg>
@@ -254,30 +311,27 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
       </a>
     </div>
 
-    <div class="teaser">
-      <figure>
-        <div class="thumb"><img src="figures/sir/saliency_samples/sample_01.png" alt="Per-day Integrated Gradients attribution on one SIR trajectory" style="object-fit:cover;object-position:50% 62%"></div>
-        <figcaption><b>SIR</b> &middot; epidemic ODE, 3 channels</figcaption>
-      </figure>
-      <figure>
-        <div class="thumb"><img src="figures/lotka_volterra/xai_lv_04_channel_time_importance_stats.png" alt="Channel and time importance statistics for the Lotka-Volterra-style signal" style="object-fit:cover;object-position:0 50%"></div>
-        <figcaption><b>Lotka-Volterra-style</b> &middot; 2-channel toy signal</figcaption>
-      </figure>
-      <figure>
-        <div class="thumb"><canvas id="heroGrf" width="64" height="64" aria-label="A Gaussian random field generated in the browser"></canvas></div>
-        <figcaption><b>Gaussian Random Field</b> &middot; 64&times;64 image (live sample)</figcaption>
-      </figure>
-      <figure>
-        <div class="thumb"><img src="figures/gravitational_wave/gw_samples.png" alt="Simulated gravitational-wave strain in two detectors" style="object-fit:cover;object-position:0 0"></div>
-        <figcaption><b>Gravitational wave</b> &middot; 2 detectors &times; 8192 samples</figcaption>
-      </figure>
+    <div class="hero-visual reveal">
+      <div class="hv-head">
+        <span class="hv-dot"></span><span>Simulated merger &middot; H1 / L1 strain</span>
+        <span class="hv-legend"><i class="lg-h1"></i>H1 <i class="lg-l1"></i>L1 <i class="lg-attr"></i>|IG attribution|</span>
+      </div>
+      <canvas id="heroWave" aria-label="Animated gravitational-wave chirp in two detectors with attribution concentrated at the merger"></canvas>
+      <div class="hv-axis"><span>&minus;1.0 s</span><span>t = 0</span><span>+0.1 s</span></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat reveal"><div class="stat-num"><span data-count="188">0</span><small>/200</small></div><div class="stat-label">toy-signal samples where IG finds the true channel</div></div>
+      <div class="stat reveal"><div class="stat-num"><span data-count="9.27" data-dec="2">0</span><small>&rarr;</small><span data-count="1.41" data-dec="2">0</span></div><div class="stat-label">GW validation MSE after fixing the normalization IG flagged</div></div>
+      <div class="stat reveal"><div class="stat-num"><span data-count="0.99" data-dec="2">0</span></div><div class="stat-label">rank correlation between IG and Masking on one GW model</div></div>
+      <div class="stat reveal"><div class="stat-num"><span data-count="4">0</span><small>&times;</small><span data-count="4">0</span></div><div class="stat-label">simulators &times; XAI methods, one config-driven registry</div></div>
     </div>
   </div>
 </header>
 
 <section id="abstract">
   <div class="wrap">
-    <div class="abstract">
+    <div class="abstract reveal">
       <h2>Abstract</h2>
       <p>
         Amortized Bayesian inference with BayesFlow compresses raw simulator output into a learned summary
@@ -339,9 +393,11 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
       the attribution methods are computed.
     </p>
 
-    <div class="diagram" role="img" aria-label="Pipeline: prior and simulator produce parameter and data pairs; one branch trains a BayesFlow summary and inference network for the posterior with diagnostics; the other trains a surrogate summary network with a linear head, explained by four XAI methods.">
+    <div class="diagram reveal" role="img" aria-label="Pipeline: prior and simulator produce parameter and data pairs; one branch trains a BayesFlow summary and inference network for the posterior with diagnostics; the other trains a surrogate summary network with a linear head, explained by four XAI methods.">
       <svg viewBox="0 0 960 300" xmlns="http://www.w3.org/2000/svg">
         <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--faint)"/></marker></defs>
+        <circle class="pulse-a" r="4"><animateMotion dur="3.2s" repeatCount="indefinite" path="M95 96 V156 H344 C 370 156, 370 74, 400 74 H790"/></circle>
+        <circle class="pulse-w" r="4"><animateMotion dur="3.2s" begin="1.6s" repeatCount="indefinite" path="M95 96 V156 H344 C 370 156, 370 236, 400 236 H790"/></circle>
         <text class="group" x="20" y="22">SIMULATION</text>
         <rect class="box" x="20" y="40" width="150" height="56" rx="10"/>
         <text class="lbl" x="95" y="64" text-anchor="middle">Prior p(&#952;)</text>
@@ -385,7 +441,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
       </svg>
     </div>
 
-    <div class="callout">
+    <div class="callout reveal">
       <b>Why a surrogate?</b>
       <p>Captum's attribution methods need a plain <code>torch.nn.Module</code> with a scalar output. The surrogate
       is a summary network of the same architecture plus a linear head that predicts one parameter, so the
@@ -396,28 +452,28 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
 
     <h3>Simulators</h3>
     <div class="grid4">
-      <div class="card">
+      <div class="card reveal">
         <span class="tag">time series &middot; 60&times;3</span>
         <h4>SIR epidemic</h4>
         <p>Stationary SIR model from the BayesFlow tutorial with negative-binomial reporting noise. The posterior sees
         reported cases; surrogates see the S, I, R fractions.</p>
         <p class="params">&lambda;, &mu;, D, I&#8320;, &psi;</p>
       </div>
-      <div class="card">
+      <div class="card reveal">
         <span class="tag">time series &middot; 20&times;2</span>
         <h4>Lotka-Volterra-style</h4>
         <p>Despite its name, a sinusoid: channel <i>X<sub>k</sub></i> = &theta;<sub>k</sub>&middot;sin(2&pi;t(1+&theta;<sub>2</sub>)) plus noise. The
         ground truth of which channel carries which parameter is known.</p>
         <p class="params">&theta;&#8320;, &theta;&#8321;, &theta;&#8322;</p>
       </div>
-      <div class="card">
+      <div class="card reveal">
         <span class="tag">image &middot; 64&times;64</span>
         <h4>Gaussian Random Field</h4>
         <p>BayesFlow's spatial-data example: a field with power spectrum <i>k</i><sup>&minus;&alpha;</sup>&middot;&sigma;&sup2;. Also used for a
         conditional diffusion model that generates fields.</p>
         <p class="params">log &sigma;, &alpha;</p>
       </div>
-      <div class="card">
+      <div class="card reveal">
         <span class="tag">time series &middot; 8192&times;2</span>
         <h4>Gravitational wave</h4>
         <p>Binary black-hole merger (PyCBC IMRPhenomPv2) in two LIGO detectors, the original benchmark from
@@ -427,7 +483,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
     </div>
 
     <h3>Explanation methods</h3>
-    <div class="table-wrap">
+    <div class="table-wrap reveal">
       <table>
         <thead><tr><th>Method</th><th>What it measures</th><th>Needs</th><th>Cost</th></tr></thead>
         <tbody>
@@ -471,19 +527,19 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
         calibrated posterior. For the GRF, both parameters are recovered almost exactly (<i>r</i> = 0.999 and 0.993) and the
         ECDF calibration curves stay inside the 95% band.
       </p>
-      <figure class="fig"><a class="frame" href="figures/sir/02_parameter_recovery.png"><img src="figures/sir/02_parameter_recovery.png" alt="SIR parameter recovery scatter plots" loading="lazy"></a>
+      <figure class="reveal fig"><a class="frame" href="figures/sir/02_parameter_recovery.png"><img src="figures/sir/02_parameter_recovery.png" alt="SIR parameter recovery scatter plots" loading="lazy"></a>
         <figcaption><b>SIR parameter recovery.</b> Posterior median vs. ground truth for 300 test data sets, with posterior intervals.</figcaption></figure>
-      <figure class="fig"><a class="frame" href="figures/sir/03_sbc_calibration.png"><img src="figures/sir/03_sbc_calibration.png" alt="SIR SBC rank histograms" loading="lazy"></a>
+      <figure class="reveal fig"><a class="frame" href="figures/sir/03_sbc_calibration.png"><img src="figures/sir/03_sbc_calibration.png" alt="SIR SBC rank histograms" loading="lazy"></a>
         <figcaption><b>SIR simulation-based calibration.</b> Rank histograms (1000 posterior draws per data set) inside the grey band are consistent with a calibrated posterior.</figcaption></figure>
       <div class="grid2">
-        <figure class="fig"><a class="frame" href="figures/grf/grf_tutorial/31_03_recovery.png"><img src="figures/grf/grf_tutorial/31_03_recovery.png" alt="GRF parameter recovery" loading="lazy"></a>
+        <figure class="reveal fig"><a class="frame" href="figures/grf/grf_tutorial/31_03_recovery.png"><img src="figures/grf/grf_tutorial/31_03_recovery.png" alt="GRF parameter recovery" loading="lazy"></a>
           <figcaption><b>GRF recovery</b> (BayesFlow tutorial &sect;3.1 reproduction).</figcaption></figure>
-        <figure class="fig"><a class="frame" href="figures/grf/grf_tutorial/31_03_calibration.png"><img src="figures/grf/grf_tutorial/31_03_calibration.png" alt="GRF calibration ECDF" loading="lazy"></a>
+        <figure class="reveal fig"><a class="frame" href="figures/grf/grf_tutorial/31_03_calibration.png"><img src="figures/grf/grf_tutorial/31_03_calibration.png" alt="GRF calibration ECDF" loading="lazy"></a>
           <figcaption><b>GRF calibration</b> (ECDF difference with 95% band).</figcaption></figure>
       </div>
-      <figure class="fig narrow"><a class="frame" href="figures/sir/xai_01_latent_space.png"><img src="figures/sir/xai_01_latent_space.png" alt="UMAP and t-SNE of the SIR summary network latent space" loading="lazy"></a>
+      <figure class="reveal fig narrow"><a class="frame" href="figures/sir/xai_01_latent_space.png"><img src="figures/sir/xai_01_latent_space.png" alt="UMAP and t-SNE of the SIR summary network latent space" loading="lazy"></a>
         <figcaption><b>Latent space of the BayesFlow SIR summary network</b> (UMAP / t-SNE of 2000 summaries, coloured by &lambda;). The summaries lie on a one-dimensional curve ordered by &lambda;, consistent with &lambda; being the best-identified parameter.</figcaption></figure>
-      <figure class="fig"><a class="frame" href="figures/grf/grf_tutorial/32_06_real_vs_generated_fields.png"><img src="figures/grf/grf_tutorial/32_06_real_vs_generated_fields.png" alt="Simulated versus diffusion-generated GRF fields" loading="lazy"></a>
+      <figure class="reveal fig"><a class="frame" href="figures/grf/grf_tutorial/32_06_real_vs_generated_fields.png"><img src="figures/grf/grf_tutorial/32_06_real_vs_generated_fields.png" alt="Simulated versus diffusion-generated GRF fields" loading="lazy"></a>
         <figcaption><b>GRF generation</b> (tutorial &sect;3.2): simulated fields (top) and fields generated by the conditional diffusion model for the same &alpha; (bottom).</figcaption></figure>
     </div>
 
@@ -496,7 +552,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
         attribution on <b>X1 in 188 of 200</b> validation samples. The most important interior time steps cluster at
         steps 3&ndash;6 and 13&ndash;17, around the extrema of the sine where the amplitude is easiest to read.
       </p>
-      <figure class="fig"><a class="frame" href="figures/lotka_volterra/xai_lv_04_channel_time_importance_stats.png"><img src="figures/lotka_volterra/xai_lv_04_channel_time_importance_stats.png" alt="Dominant channel and time-step statistics for the Lotka-Volterra-style simulator" loading="lazy"></a>
+      <figure class="reveal fig"><a class="frame" href="figures/lotka_volterra/xai_lv_04_channel_time_importance_stats.png"><img src="figures/lotka_volterra/xai_lv_04_channel_time_importance_stats.png" alt="Dominant channel and time-step statistics for the Lotka-Volterra-style simulator" loading="lazy"></a>
         <figcaption><b>Integrated Gradients statistics, target &theta;&#8320;, 200 samples.</b> Left: dominant channel. Middle / right: pooled top-5 and bottom-5 time steps (the first and last step are excluded, see the endpoint effect under SIR).</figcaption></figure>
     </div>
 
@@ -507,7 +563,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
         The SIR surrogate (GRU on the full S, I, R trajectories) only learns &lambda; well (held-out R&sup2; = 0.90;
         R&sup2; &le; 0.03 for &mu;, D, I&#8320;, &psi;), so all SIR explanations target &lambda;.
       </p>
-      <div class="table-wrap">
+      <div class="table-wrap reveal">
         <table>
           <thead><tr><th>Method</th><th>Channel ranking for &lambda;</th><th>Where in time</th></tr></thead>
           <tbody>
@@ -519,7 +575,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
           </tbody>
         </table>
       </div>
-      <div class="callout warn">
+      <div class="callout warn reveal">
         <b>Two effects make these rankings hard to read.</b>
         <p>(1) <i>Endpoint effect:</i> the GRU surrogates read out only the last hidden state, so the final time step
         reaches the output through one update and dominates |attribution| almost by construction; this is why the
@@ -530,18 +586,18 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
         model.</p>
       </div>
       <div class="grid2">
-        <figure class="fig"><a class="frame" href="figures/sir/xai_02_integrated_gradients.png"><img src="figures/sir/xai_02_integrated_gradients.png" alt="SIR Integrated Gradients by channel and over time" loading="lazy"></a>
+        <figure class="reveal fig"><a class="frame" href="figures/sir/xai_02_integrated_gradients.png"><img src="figures/sir/xai_02_integrated_gradients.png" alt="SIR Integrated Gradients by channel and over time" loading="lazy"></a>
           <figcaption><b>Integrated Gradients</b>, by channel and over time.</figcaption></figure>
-        <figure class="fig"><a class="frame" href="figures/sir/workflow_sir_saliency_map_saliency_map.png"><img src="figures/sir/workflow_sir_saliency_map_saliency_map.png" alt="SIR saliency channel importance" loading="lazy"></a>
+        <figure class="reveal fig"><a class="frame" href="figures/sir/workflow_sir_saliency_map_saliency_map.png"><img src="figures/sir/workflow_sir_saliency_map_saliency_map.png" alt="SIR saliency channel importance" loading="lazy"></a>
           <figcaption><b>Saliency Map</b>, by channel.</figcaption></figure>
-        <figure class="fig"><a class="frame" href="figures/sir/workflow_sir_masking_masking_time_importance.png"><img src="figures/sir/workflow_sir_masking_masking_time_importance.png" alt="SIR masking importance over time" loading="lazy"></a>
+        <figure class="reveal fig"><a class="frame" href="figures/sir/workflow_sir_masking_masking_time_importance.png"><img src="figures/sir/workflow_sir_masking_masking_time_importance.png" alt="SIR masking importance over time" loading="lazy"></a>
           <figcaption><b>Masking</b>, prediction shift when one day is zeroed.</figcaption></figure>
-        <figure class="fig"><a class="frame" href="figures/sir/xai_03a_attention_rollout_bar.png"><img src="figures/sir/xai_03a_attention_rollout_bar.png" alt="SIR attention rollout per day" loading="lazy"></a>
+        <figure class="reveal fig"><a class="frame" href="figures/sir/xai_03a_attention_rollout_bar.png"><img src="figures/sir/xai_03a_attention_rollout_bar.png" alt="SIR attention rollout per day" loading="lazy"></a>
           <figcaption><b>Attention Rollout</b>, mean attention received per day. The Transformer is trained on all five parameters jointly, so the rollout does not depend on the target.</figcaption></figure>
       </div>
-      <figure class="fig"><a class="frame" href="figures/sir/xai_04_channel_time_importance_stats.png"><img src="figures/sir/xai_04_channel_time_importance_stats.png" alt="SIR channel and time importance statistics" loading="lazy"></a>
+      <figure class="reveal fig"><a class="frame" href="figures/sir/xai_04_channel_time_importance_stats.png"><img src="figures/sir/xai_04_channel_time_importance_stats.png" alt="SIR channel and time importance statistics" loading="lazy"></a>
         <figcaption><b>IG statistics over 50 validation samples</b>: dominant channel and pooled most / least important interior days.</figcaption></figure>
-      <figure class="fig narrow"><a class="frame" href="figures/sir/saliency_samples/sample_01.png"><img src="figures/sir/saliency_samples/sample_01.png" alt="Per-sample dot saliency map for one SIR trajectory" loading="lazy"></a>
+      <figure class="reveal fig narrow"><a class="frame" href="figures/sir/saliency_samples/sample_01.png"><img src="figures/sir/saliency_samples/sample_01.png" alt="Per-sample dot saliency map for one SIR trajectory" loading="lazy"></a>
         <figcaption><b>Per-sample view.</b> One trajectory (top) and its IG attribution as dot size and colour per channel and day (bottom).</figcaption></figure>
     </div>
 
@@ -556,11 +612,11 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
         on the left and right. These maps describe a CNN surrogate trained for 30 epochs on 2000 fields.
       </p>
       <div class="grid3">
-        <figure class="fig"><a class="frame" href="figures/grf/workflow_grf_integrated_gradients_integrated_gradients.png"><img src="figures/grf/workflow_grf_integrated_gradients_integrated_gradients.png" alt="GRF mean IG pixel attribution" loading="lazy"></a>
+        <figure class="reveal fig"><a class="frame" href="figures/grf/workflow_grf_integrated_gradients_integrated_gradients.png"><img src="figures/grf/workflow_grf_integrated_gradients_integrated_gradients.png" alt="GRF mean IG pixel attribution" loading="lazy"></a>
           <figcaption><b>Integrated Gradients</b> (mean |attribution|).</figcaption></figure>
-        <figure class="fig"><a class="frame" href="figures/grf/workflow_grf_saliency_map_saliency_map.png"><img src="figures/grf/workflow_grf_saliency_map_saliency_map.png" alt="GRF mean saliency map" loading="lazy"></a>
+        <figure class="reveal fig"><a class="frame" href="figures/grf/workflow_grf_saliency_map_saliency_map.png"><img src="figures/grf/workflow_grf_saliency_map_saliency_map.png" alt="GRF mean saliency map" loading="lazy"></a>
           <figcaption><b>Saliency Map</b> (mean |gradient|).</figcaption></figure>
-        <figure class="fig"><a class="frame" href="figures/grf/workflow_grf_masking_masking_patch_importance.png"><img src="figures/grf/workflow_grf_masking_masking_patch_importance.png" alt="GRF masking patch importance" loading="lazy"></a>
+        <figure class="reveal fig"><a class="frame" href="figures/grf/workflow_grf_masking_masking_patch_importance.png"><img src="figures/grf/workflow_grf_masking_masking_patch_importance.png" alt="GRF masking patch importance" loading="lazy"></a>
           <figcaption><b>Masking</b> (8&times;8 patches).</figcaption></figure>
       </div>
       <div class="grf-demo card" style="margin-top:20px">
@@ -583,7 +639,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
         normalisation differs. IG uses the zero-strain level as baseline and 200 steps; statistics over 64
         validation samples, time relative to the H1 merger.
       </p>
-      <div class="table-wrap">
+      <div class="table-wrap reveal">
         <table>
           <thead><tr><th>Input normalisation</th><th>Val. MSE</th><th>IG peak</th><th>Samples peaking within &plusmn;50 ms of merger</th><th>IG share in last 0.2 s</th></tr></thead>
           <tbody>
@@ -592,9 +648,9 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
           </tbody>
         </table>
       </div>
-      <figure class="fig"><a class="frame" href="figures/gravitational_wave/gw_ig_time_comparison.png"><img src="figures/gravitational_wave/gw_ig_time_comparison.png" alt="IG over time for min-max versus z-score inputs" loading="lazy"></a>
+      <figure class="reveal fig"><a class="frame" href="figures/gravitational_wave/gw_ig_time_comparison.png"><img src="figures/gravitational_wave/gw_ig_time_comparison.png" alt="IG over time for min-max versus z-score inputs" loading="lazy"></a>
         <figcaption><b>IG over time, min-max (top) vs. z-score (bottom).</b> Grey: mean |signal|; dashed: H1 merger. With min-max inputs the attribution sits in blocks around &minus;0.7, &minus;0.2 and +0.3 s, where the merger contributes almost nothing.</figcaption></figure>
-      <div class="callout">
+      <div class="callout reveal">
         <b>Where the artefact comes from</b>
         <p>PyCBC starts the waveform below 20 Hz, but the noise PSD has no power there, so <code>whiten()</code>
         (which estimates the PSD from the data) amplifies the sub-20 Hz inspiral by about four orders of magnitude;
@@ -602,12 +658,12 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
         &minus;1.5 s to +0.5 s that continues past the merger, and min-max scaling spends almost the whole [0, 1]
         range on it. The simulator is deliberately left unmodified: the artefact is a result of the analysis.</p>
       </div>
-      <figure class="fig"><a class="frame" href="figures/gravitational_wave/gw_samples.png"><img src="figures/gravitational_wave/gw_samples.png" alt="Raw simulated strain, merger zoom and spectrogram for four mass pairs" loading="lazy"></a>
+      <figure class="reveal fig"><a class="frame" href="figures/gravitational_wave/gw_samples.png"><img src="figures/gravitational_wave/gw_samples.png" alt="Raw simulated strain, merger zoom and spectrogram for four mass pairs" loading="lazy"></a>
         <figcaption><b>Raw simulator output</b> for four (m&#8321;, q) pairs: full 4 s window, zoom on the merger, H1 spectrogram.</figcaption></figure>
 
       <h3>IG vs. Saliency vs. Masking on one model</h3>
       <p class="prose">One z-score model (data seed 42, val. MSE 0.60), the same 64 validation samples for every method. Masking uses 15.6 ms windows per detector.</p>
-      <div class="table-wrap">
+      <div class="table-wrap reveal">
         <table>
           <thead><tr><th></th><th>Integrated Gradients</th><th>Saliency Map</th><th>Masking</th></tr></thead>
           <tbody>
@@ -620,9 +676,9 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
           </tbody>
         </table>
       </div>
-      <figure class="fig"><a class="frame" href="figures/gravitational_wave/gwxai_gravitational_wave_zscore_xai_comparison.png"><img src="figures/gravitational_wave/gwxai_gravitational_wave_zscore_xai_comparison.png" alt="IG, saliency and masking over time for one gravitational-wave model" loading="lazy"></a>
+      <figure class="reveal fig"><a class="frame" href="figures/gravitational_wave/gwxai_gravitational_wave_zscore_xai_comparison.png"><img src="figures/gravitational_wave/gwxai_gravitational_wave_zscore_xai_comparison.png" alt="IG, saliency and masking over time for one gravitational-wave model" loading="lazy"></a>
         <figcaption><b>Three methods, one model.</b> Saliency measures sensitivity and so lights up signal-free regions; its early peaks fall on a regular 0.25 s grid (512 samples = 2<sup>9</sup>, one of the dilations), which points to the architecture. IG and Masking both measure change from the zero-strain baseline and agree.</figcaption></figure>
-      <div class="callout warn">
+      <div class="callout warn reveal">
         <b>Not a robust physical result</b>
         <p>The H1 preference (57&ndash;60%) is consistent across methods for this model but not across trainings: an
         earlier z-score model (data seed 0) had H1/L1 = 46/54, close to its signal energy. The two z-score trainings
@@ -631,7 +687,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
     </div>
 
     <h3 style="margin-top:3rem">Explore all figures</h3>
-    <div class="explorer" id="explorer">
+    <div class="explorer reveal" id="explorer">
       <div class="controls">
         <div><label>simulator</label><div class="seg" id="simSeg"></div></div>
         <div><label>xai_method</label><div class="seg" id="xaiSeg"></div></div>
@@ -647,9 +703,9 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
     <div class="kicker">04</div>
     <h2>Discussion</h2>
     <div class="grid3" style="margin-top:18px">
-      <div class="card"><h4>Attributions can find bugs that diagnostics miss</h4><p>The min-max GW model has a working loss curve; only IG showed it was reading the whitening artefact instead of the merger.</p></div>
-      <div class="card"><h4>Agreement is the useful signal</h4><p>IG and Masking agree on the GW model (&rho; = 0.99) although one uses gradients and the other only forward passes. Where methods disagree (SIR channels), no single map should be trusted.</p></div>
-      <div class="card"><h4>Architecture and baseline shape the maps</h4><p>Last-state GRU read-outs inflate endpoints, zero baselines favour large-magnitude channels, CNN padding darkens borders, dilations leave a grid in Saliency.</p></div>
+      <div class="card reveal"><h4>Attributions can find bugs that diagnostics miss</h4><p>The min-max GW model has a working loss curve; only IG showed it was reading the whitening artefact instead of the merger.</p></div>
+      <div class="card reveal"><h4>Agreement is the useful signal</h4><p>IG and Masking agree on the GW model (&rho; = 0.99) although one uses gradients and the other only forward passes. Where methods disagree (SIR channels), no single map should be trusted.</p></div>
+      <div class="card reveal"><h4>Architecture and baseline shape the maps</h4><p>Last-state GRU read-outs inflate endpoints, zero baselines favour large-magnitude channels, CNN padding darkens borders, dilations leave a grid in Saliency.</p></div>
     </div>
   </div>
 </section>
@@ -870,6 +926,95 @@ https://github.com/ferihabircan/bayesflow-xai</code></pre>
   }
   exImg.addEventListener('click', function () { openLb(exImg.src, exImg.alt); });
   render();
+
+
+  // ---------- scroll reveal, counters, progress ----------
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function countUp(el) {
+    var target = parseFloat(el.dataset.count), dec = +(el.dataset.dec || 0), t0 = null, dur = 1400;
+    if (reduce) { el.textContent = target.toFixed(dec); return; }
+    function step(ts) {
+      if (!t0) t0 = ts;
+      var k = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = (target * e).toFixed(dec);
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window && !reduce) {
+    var ro = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('in');
+        e.target.querySelectorAll('[data-count]').forEach(countUp);
+        ro.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    revealEls.forEach(function (el) { ro.observe(el); });
+  } else {
+    revealEls.forEach(function (el) { el.classList.add('in'); });
+    document.querySelectorAll('[data-count]').forEach(countUp);
+  }
+  var bar = document.getElementById('progress');
+  window.addEventListener('scroll', function () {
+    var h = document.documentElement.scrollHeight - innerHeight;
+    bar.style.width = (h > 0 ? 100 * scrollY / h : 0) + '%';
+  }, { passive: true });
+
+  // ---------- hero: animated chirp with attribution at the merger ----------
+  // Leading-order inspiral: f(tau) ~ tau^(-3/8), amplitude ~ f^(2/3), then an
+  // exponentially damped ringdown after the merger (t = 0). Illustrative only.
+  (function () {
+    var cv = document.getElementById('heroWave');
+    if (!cv) return;
+    var ctx = cv.getContext('2d'), W, H, dpr, t0 = performance.now();
+    var T0 = -1.0, T1 = 0.1, N = 900;
+    function size() {
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = cv.clientWidth; H = cv.clientHeight;
+      cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    size(); window.addEventListener('resize', size);
+    function strain(t, lag, phase) {
+      var tt = t - lag, tc = 0.004;
+      if (tt < tc) {
+        var tau = tc - tt + 0.004, f = 28 * Math.pow(tau / 1.0, -0.375);
+        var ph = -2 * Math.PI * 1.6 * 28 * Math.pow(tau, 0.625) / 0.625 + phase;
+        return Math.min(1, 0.11 * Math.pow(f / 28, 0.6667)) * Math.cos(ph);
+      }
+      var d = tt - tc;
+      return 0.86 * Math.exp(-d / 0.012) * Math.cos(2 * Math.PI * 250 * d + phase);
+    }
+    function x(t) { return (t - T0) / (T1 - T0) * W; }
+    function frame(now) {
+      var s = (now - t0) / 1000, draw = reduce ? 1 : Math.min(1, s / 2.2);
+      ctx.clearRect(0, 0, W, H);
+      var css = getComputedStyle(document.documentElement);
+      // attribution band near the merger
+      var mx = x(-0.005), pulse = reduce ? 0.3 : 0.24 + 0.1 * Math.sin(s * 2.4);
+      var g = ctx.createLinearGradient(mx - 60, 0, mx + 30, 0);
+      g.addColorStop(0, 'rgba(224,86,59,0)'); g.addColorStop(0.7, 'rgba(224,86,59,' + pulse + ')'); g.addColorStop(1, 'rgba(224,86,59,0)');
+      if (draw > 0.85) { ctx.globalAlpha = (draw - 0.85) / 0.15; ctx.fillStyle = g; ctx.fillRect(mx - 60, 4, 90, H - 8); ctx.globalAlpha = 1; }
+      // merger line
+      ctx.strokeStyle = css.getPropertyValue('--faint'); ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x(0), 4); ctx.lineTo(x(0), H - 4); ctx.stroke(); ctx.setLineDash([]);
+      // two detectors
+      var phase = reduce ? 0 : s * 2.0;
+      [['#3b7dd8', 0, 1, H * 0.36], ['#f08a24', 0.007, -0.8, H * 0.68]].forEach(function (d) {
+        ctx.strokeStyle = d[0]; ctx.lineWidth = 1.4; ctx.beginPath();
+        var last = Math.floor(N * draw);
+        for (var i = 0; i <= last; i++) {
+          var t = T0 + (T1 - T0) * i / N;
+          var y = d[3] - d[2] * strain(t, d[1], phase) * H * 0.3 + (reduce ? 0 : 1.2 * Math.sin(i * 12.9898 + s * 9));
+          if (i === 0) ctx.moveTo(x(t), y); else ctx.lineTo(x(t), y);
+        }
+        ctx.stroke();
+      });
+      if (!reduce) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
 
   // ---------- GRF generator ----------
   // Complex Gaussian noise in Fourier space scaled by sqrt(P(k)) = k^(-alpha/2),
