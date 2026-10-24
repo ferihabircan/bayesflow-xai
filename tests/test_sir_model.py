@@ -3,6 +3,7 @@
 import numpy as np
 
 from bayesflow_xai.simulation.sir_model import prior, stationary_SIR
+from bayesflow_xai.utils.config import CONFIG
 
 
 def test_prior_keys():
@@ -15,7 +16,7 @@ def test_stationary_sir_output_shape():
     theta = prior()
     out = stationary_SIR(**theta)
     assert "cases" in out
-    assert len(out["cases"]) == 14  # CONFIG.horizon_days
+    assert len(out["cases"]) == CONFIG.horizon_days
     assert np.all(out["cases"] >= 0)
 
 

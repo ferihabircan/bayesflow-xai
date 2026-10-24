@@ -2,7 +2,7 @@
 # future extension to a YAML-driven CLI (e.g. with hydra or a simple loader).
 seed: 2026
 population_size: 83000000
-horizon_days: 14
+horizon_days: 60
 
 training:
   n_train_sims: 6000

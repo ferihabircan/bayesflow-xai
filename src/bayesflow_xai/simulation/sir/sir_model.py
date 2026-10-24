@@ -49,9 +49,11 @@ def stationary_SIR(
 
     for _ in range(1, T + Dc):
         I_new = lambd * (I[-1] * S[-1] / N)
+        # Recoveries use the previous day's I, so S + I + R stays equal to N.
+        R_new = mu * I[-1]
         S.append(S[-1] - I_new)
-        I.append(np.clip(I[-1] + I_new - mu * I[-1], 0.0, N))
-        R.append(np.clip(R[-1] + mu * I[-1], 0.0, N))
+        I.append(np.clip(I[-1] + I_new - R_new, 0.0, N))
+        R.append(np.clip(R[-1] + R_new, 0.0, N))
         C.append(I_new)
 
     reparam = _convert_params(np.clip(np.array(C[Dc:]), 0, N) + eps, psi)

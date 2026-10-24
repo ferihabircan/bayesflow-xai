@@ -11,3 +11,5 @@ numpy
 FyeldGenerator
 pyyaml
 pytest
+# optional, gravitational_wave simulator only:
+# pycbc
