@@ -92,7 +92,7 @@ They are widely used for image classifiers but rarely for the summary networks o
 \begin{enumerate}[label=\textbf{Q\arabic*}]
   \item Do attributions recover what is known to be informative when the ground truth is known?
   \item Do different attribution methods agree on the same trained model?
-  \item Can attributions reveal problems that standard SBI diagnostics miss?
+  \item Can attributions reveal simulator-induced problems that a model's loss alone does not explain?
 \end{enumerate}
 
 \paragraph{Contributions.}
@@ -209,18 +209,17 @@ which needs one forward pass per region and no gradients.
   \node[font=\scriptsize\itshape, text=accent, above=0.5mm of flow] {BayesFlow posterior};
   \node[font=\scriptsize\itshape, text=warn, below=0.5mm of head] {attribution surrogate};
 \end{tikzpicture}}
-\caption{Pipeline. Each simulator trains a BayesFlow posterior, evaluated with the standard diagnostics, and a
-surrogate regressor of the same summary-network family, on which attribution methods are computed.}
+\caption{Pipeline. Every simulator trains a surrogate regressor of the summary-network family, on which attribution
+methods are computed. For SIR and the GRF, a BayesFlow posterior is also trained and evaluated with the standard diagnostics.}
 \label{fig:pipeline}
 \end{figure}
 
 \subsection{Posterior estimators and attribution surrogates}
 
-For every simulator we train two models (Fig.~\ref{fig:pipeline}). The \emph{BayesFlow posterior} optimizes
+We use two kinds of model (Fig.~\ref{fig:pipeline}). The \emph{BayesFlow posterior}, trained for SIR and the GRF, optimizes
 Eq.~\eqref{eq:npe} and is evaluated with recovery and SBC; the latent-space projection (UMAP and t-SNE of
 summary vectors) is computed on its summary network. The \emph{attribution surrogate} is a plain PyTorch summary
-network of the same family followed by a linear head, trained with mean-squared error to predict all
-parameters. A wrapper exposes a single output $f(x)=\hat\theta_k(x)$ for the target parameter $k$, as required
+network followed by a linear head, trained with mean-squared error to predict all parameters, for all four simulators. A wrapper exposes a single output $f(x)=\hat\theta_k(x)$ for the target parameter $k$, as required
 by Captum~\cite{kokhlikyan2020captum}. The surrogate is needed because the flow's output is a distribution, not a
 differentiable scalar. \textbf{All attribution maps therefore describe what a network of the given architecture
 learns to extract from the data, not the normalizing-flow posterior itself.} Algorithm~\ref{alg:xai} summarizes
@@ -459,7 +458,7 @@ $2.5\cdot10^5$. The 20\,Hz FIR high-pass reduces it only about sixfold. Every sa
 monochromatic ${\sim}20$\,Hz oscillation with a bell-shaped envelope from $-1.5$ to $+0.5$\,s that continues past
 the merger, while the physical chirp is visible only in the last ${\sim}50$\,ms. Min-max scaling devotes almost
 the full $[0,1]$ range to this artefact. The simulator was deliberately left unmodified: the artefact is a finding
-of the attribution analysis, not of the loss, which trains normally.
+of the attribution analysis: the higher validation error shows that the min-max model is worse, but not what it relies on.
 
 \subsection{Comparing methods on one model}
 
@@ -494,10 +493,11 @@ H1/L1 attribution & 57/43 & 60/40 & 59/41 \\
 \section{Discussion}
 %======================================================================
 
-\paragraph{Attribution complements SBI diagnostics.} The min-max GW model trains without visible problems; only
-the attribution analysis showed that it ignored the merger, and following the attribution back into the
-simulator located the cause (Q3). Attribution checks \emph{what} a network learned, which recovery and
-calibration on simulated data cannot.
+\paragraph{Attribution complements performance metrics.} The validation error of the min-max GW model is higher than
+that of the z-score model, but it does not show why. The attribution analysis showed that the model ignored the
+merger, and following the attribution back into the simulator located the cause (Q3). Attribution addresses
+\emph{what} a network learned, a question that error metrics do not answer. Because no posterior was trained for
+GW, we cannot say whether recovery or SBC would have flagged this model.
 
 \paragraph{Agreement is more informative than a single map.} IG and Masking agree almost perfectly on the GW
 model although one integrates gradients and the other uses only forward passes. Both measure change relative to
@@ -524,6 +524,7 @@ property of a training run, not a physical result.
 \begin{itemize}
   \item \textbf{Surrogates, not posteriors.} Attributions are computed on MSE regressors, not on the BayesFlow
   summary network and flow; for SIR the surrogate also sees noise-free S/I/R instead of noisy cases.
+  \item \textbf{No posterior for two simulators.} BayesFlow posteriors, and hence recovery and SBC, exist only for SIR and the GRF, not for the toy signal or GW.
   \item \textbf{Partial fit.} The SIR surrogate explains only $\lambda$; standardizing targets would likely help
   for $\mu$ and $D$.
   \item \textbf{Single runs.} Most results use one seed; the two z-score GW models differ by more than $2\times$
@@ -532,14 +533,14 @@ property of a training run, not a physical result.
   deletion/insertion curves or randomization tests~\cite{adebayo2018sanity}.
   \item \textbf{Baselines.} IG used a zero baseline for SIR, the toy signal and the GRF.
 \end{itemize}
-Future work includes attributing through the BayesFlow summary network itself (e.g.\ to posterior moments),
+Future work includes training a GW posterior to test whether recovery and SBC detect the artefact, attributing through the BayesFlow summary network itself (e.g.\ to posterior moments),
 multi-seed studies, quantitative faithfulness evaluation, and systematic baseline comparisons.
 
 %======================================================================
 \section{Conclusion}
 %======================================================================
 
-Attribution methods are a useful complement to standard SBI diagnostics. On a toy problem they recover the
+Attribution methods are a useful complement to performance metrics in SBI. On a toy problem they recover the
 known structure; on a realistic gravitational-wave benchmark, Integrated Gradients revealed that a network relied
 on a simulator artefact rather than the physical signal, leading to a better normalization. Attributions also
 depend on architecture, baseline and training run, and are best read through agreement between methods.

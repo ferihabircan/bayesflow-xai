@@ -17,7 +17,7 @@ decorator away.
 Two model families live in this repo, and it matters which one an XAI
 figure is about:
 
-1. **BayesFlow posterior estimators** (`training/`): a `BasicWorkflow`
+1. **BayesFlow posterior estimators** (`training/`, SIR and GRF only): a `BasicWorkflow`
    with a summary network and a coupling-flow inference network, trained
    on simulated data and checked with loss / parameter-recovery / SBC
    diagnostics. For SIR the network sees the noisy reported-case series.

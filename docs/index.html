@@ -378,7 +378,7 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
     <ul class="tight">
       <li>Do attributions recover what we know is informative when the ground truth is known?</li>
       <li>Do different XAI methods agree with each other on the same trained model?</li>
-      <li>Can attributions reveal problems that the usual SBI diagnostics miss?</li>
+      <li>Can attributions reveal simulator-induced problems that a model's loss alone does not explain?</li>
     </ul>
   </div>
 </section>
@@ -388,9 +388,7 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
     <div class="kicker">02</div>
     <h2>Method</h2>
     <p class="lead">
-      Each simulator is used twice: to train a full BayesFlow posterior (checked with the standard
-      diagnostics), and to train a plain-PyTorch surrogate regressor of the same summary-network family, on which
-      the attribution methods are computed.
+      Every simulator trains a plain-PyTorch surrogate regressor of the summary-network family, on which the attribution methods are computed. For SIR and the GRF, a full BayesFlow posterior is also trained and checked with the standard diagnostics.
     </p>
 
     <div class="diagram reveal" role="img" aria-label="Pipeline: prior and simulator produce parameter and data pairs; one branch trains a BayesFlow summary and inference network for the posterior with diagnostics; the other trains a surrogate summary network with a linear head, explained by four XAI methods.">
@@ -411,7 +409,7 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
         <text class="lbl" x="289" y="152" text-anchor="middle">(&#952;, x)</text>
         <text class="sub" x="289" y="170" text-anchor="middle">training pairs</text>
 
-        <text class="group" x="400" y="22">BAYESFLOW POSTERIOR</text>
+        <text class="group" x="400" y="22">BAYESFLOW POSTERIOR (SIR, GRF)</text>
         <path class="arrow" d="M344 146 C 370 146, 370 74, 398 74"/>
         <rect class="box-a" x="400" y="46" width="150" height="56" rx="10"/>
         <text class="lbl" x="475" y="70" text-anchor="middle">Summary net</text>
@@ -425,7 +423,7 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
         <text class="lbl" x="865" y="70" text-anchor="middle">Diagnostics</text>
         <text class="sub" x="865" y="88" text-anchor="middle">recovery &#183; SBC &#183; latent</text>
 
-        <text class="group" x="400" y="200">XAI SURROGATE</text>
+        <text class="group" x="400" y="200">XAI SURROGATE (ALL SIMULATORS)</text>
         <path class="arrow" d="M344 166 C 370 166, 370 236, 398 236"/>
         <rect class="box-w" x="400" y="208" width="150" height="56" rx="10"/>
         <text class="lbl" x="475" y="232" text-anchor="middle">Summary net</text>
@@ -703,7 +701,7 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
     <div class="kicker">04</div>
     <h2>Discussion</h2>
     <div class="grid3" style="margin-top:18px">
-      <div class="card reveal"><h4>Attributions can find bugs that diagnostics miss</h4><p>The min-max GW model has a working loss curve; only IG showed it was reading the whitening artefact instead of the merger.</p></div>
+      <div class="card reveal"><h4>Attributions explain what metrics cannot</h4><p>Validation error shows that the min-max GW model is worse; IG showed why: it reads the whitening artefact instead of the merger.</p></div>
       <div class="card reveal"><h4>Agreement is the useful signal</h4><p>IG and Masking agree on the GW model (&rho; = 0.99) although one uses gradients and the other only forward passes. Where methods disagree (SIR channels), no single map should be trusted.</p></div>
       <div class="card reveal"><h4>Architecture and baseline shape the maps</h4><p>Last-state GRU read-outs inflate endpoints, zero baselines favour large-magnitude channels, CNN padding darkens borders, dilations leave a grid in Saliency.</p></div>
     </div>
@@ -717,6 +715,7 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
     <ul class="tight">
       <li><b>Surrogates, not the posterior.</b> Attributions are computed on MSE regressors of the same architecture, not on the BayesFlow summary network + flow. For SIR the surrogate also sees S/I/R instead of the case counts.</li>
       <li><b>Only some parameters are explained.</b> The SIR surrogate learns only &lambda; (R&sup2; 0.90); its targets are not standardised, so the MSE is dominated by the high-variance, weakly identified I&#8320; and &psi;.</li>
+      <li><b>No posterior for two simulators.</b> BayesFlow posteriors, and so recovery and SBC, exist only for SIR and the GRF. For the toy signal and GW only surrogates were trained, so it is untested whether those diagnostics would flag the GW artefact.</li>
       <li><b>Single runs.</b> Most figures come from one training seed. The two GW z-score runs differ in val. MSE by more than 2&times;.</li>
       <li><b>No quantitative faithfulness test.</b> Methods are compared with each other and with known structure, not with deletion/insertion curves or randomisation checks.</li>
       <li><b>Baseline choice.</b> IG used a zero baseline for SIR, Lotka-Volterra and GRF; other baselines were not compared systematically.</li>
