@@ -14,6 +14,7 @@ scripts, kept for their specific figure sets:
 | `run_grf_xai.py` | GRF pixel-level Integrated Gradients |
 | `run_grf_tutorial_31.py` / `run_grf_tutorial_32.py` | full GRF tutorial reproductions (sections 3.1 / 3.2) |
 | `run_all.py` | diagnostics + all 3 SIR XAI analyses in one run |
+| `run_sir_method_comparison.py` | SIR: IG vs Saliency vs Masking on one trained surrogate |
 | `run_gw_xai_comparison.py` | gravitational wave: IG vs Saliency vs Masking on one trained model |
 | `plot_gw_ig_time.py` | gravitational wave: time-resolved attribution plot from saved `.npz` files |
 | `plot_gw_samples.py` | gravitational wave: raw simulated strain, merger zoom and spectrogram |

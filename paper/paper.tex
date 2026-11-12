@@ -26,7 +26,7 @@
 \title{Attribution-Based Explanations of Neural Summary Networks in Amortized Simulation-Based Inference}
 
 \author{\IEEEauthorblockN{Feriha Bircan}
-\IEEEauthorblockA{Research internship project\\
+\IEEEauthorblockA{Department of Computer Engineering, TED University, Ankara, Turkey\\
 \url{https://github.com/ferihabircan/bayesflow-xai}}}
 
 \maketitle
@@ -46,8 +46,9 @@ trained on min-max-normalized strain ignores the merger and relies on a non-phys
 introduced by the simulator's whitening step; switching to z-score normalization moves the attribution onto
 the merger and reduces validation error from 9.27 to 1.41. On one trained model, Integrated Gradients and
 Masking agree closely (rank correlation 0.99), whereas Saliency places 58\% of its mass in signal-free regions.
-The SIR experiments delimit the approach: methods disagree on the relevant input channel, and the recurrent
-read-out and the attribution baseline leave identifiable fingerprints on the maps.
+On one SIR surrogate the same split appears: Integrated Gradients and Masking agree on the dominant input
+channel while Saliency does not, and the recurrent read-out and the attribution baseline leave identifiable
+fingerprints on the maps.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -75,7 +76,7 @@ and posterior approximations can be unfaithful in ways that standard training me
 
 Feature-attribution methods from explainable AI (XAI) assign an importance score to every input element for a
 given network output~\cite{simonyan2014deep,sundararajan2017axiomatic,zeiler2014visualizing,abnar2020quantifying}.
-They are widely used for image classifiers but rarely for the summary networks of amortized SBI. We ask:
+They are widely used for image classifiers but, to our knowledge, rarely for the summary networks of amortized SBI. We ask:
 
 \begin{enumerate}[label=\textbf{Q\arabic*}]
   \item Do attributions recover what is known to be informative when the ground truth is known?
@@ -250,12 +251,12 @@ discrete time with population $N=83\cdot10^6$:
 \end{equation}
 Reported cases over $T=60$ days start after a delay $D$ and follow a negative binomial with mean $C_t$ and
 dispersion $\psi$. Priors: $\lambda\sim\mathrm{LogN}(\log 0.4,0.5)$, $\mu\sim\mathrm{LogN}(\log\tfrac18,0.2)$,
-$D\sim\mathrm{LogN}(\log 8,0.2)$, $I_0\sim\Gamma(2,20)$, $\psi\sim\mathrm{Exp}$ with mean 5. The posterior sees
+$D\sim\mathrm{LogN}(\log 8,0.2)$, $I_0\sim\mathrm{Gamma}(\text{shape }2,\text{ scale }20)$, $\psi\sim\mathrm{Exp}$ with mean 5. The posterior sees
 $\log(1+\text{cases})$; the surrogates see the noise-free fractions $(S,I,R)/N\in\mathbb{R}^{60\times3}$ and regress
 $\log(1+\theta)$.
 
-\paragraph{Toy signal (``Lotka--Volterra-style'')} Despite its name, not the predator--prey ODE: with
-$\theta\sim\mathcal{U}(-1,1)^3$ and 20 time points $t\in[0,1]$,
+\paragraph{Sinusoidal toy signal} With $\theta\sim\mathcal{U}(-1,1)^3$ and 20 time points $t\in[0,1]$, two
+channels are generated as
 \begin{equation}
   X_k(t)=\theta_{k-1}\sin\!\big(2\pi t(1+\theta_2)\big)+0.05\,\varepsilon,\quad k\in\{1,2\}.
 \end{equation}
@@ -274,9 +275,10 @@ detector), aligned so that the H1 merger is at $t=0$. The target is $m_1$.
 \subsection{Architectures and settings}
 
 Table~\ref{tab:setup} lists the networks and training budgets. IG uses a zero baseline with $n=50$ steps for SIR,
-the toy signal and the GRF, and the zero-strain level (the median input) with $n=200$ for GW. Masking occludes
-single time steps (all channels) or $8\times8$ patches with zeros; for GW it occludes 32-sample (15.6\,ms)
-windows of one detector at a time. For the SIR and toy-signal statistics the first and last time step are
+the toy signal and the GRF, and the zero-strain level (the median input) with $n=200$ for GW. Masking sets one
+(time step, channel) entry of the SIR input, or one $8\times8$ patch of the GRF, to zero; for GW it occludes
+32-sample (15.6\,ms) windows of one detector at a time. For SIR, all three methods are applied to the same
+GRU surrogate and the same 200 validation samples. For the SIR and toy-signal statistics the first and last time step are
 excluded from importance rankings (Sec.~\ref{sec:fingerprints}).
 
 \begin{table}[!tb]
@@ -322,7 +324,7 @@ consistent with calibration.}
 For SIR (Fig.~\ref{fig:sir-diag}), recovery is near-perfect for the infection rate $\lambda$ ($r=0.98$), good for
 $\psi$ ($0.86$) and $I_0$ ($0.74$), and weak for $\mu$ ($0.18$) and $D$ ($0.41$), whose posteriors remain wide, as
 expected for weakly identified parameters. All SBC histograms lie inside the confidence band. The UMAP and t-SNE
-embeddings of 2000 summary vectors form a one-dimensional curve ordered by $\lambda$. For the GRF, recovery is
+embeddings of 2000 summary vectors lie on a one-dimensional curve, with the largest $\lambda$ values at one end. For the GRF, recovery is
 near-perfect ($r=0.999$ for $\log\sigma$, $0.993$ for $\alpha$) and the ECDF calibration curves stay inside the
 95\% band.
 
@@ -365,43 +367,44 @@ For $\theta_0$, IG assigns the larger total attribution to $X_1$ in \textbf{188 
 (Fig.~\ref{fig:lv}). The most important interior time steps cluster at steps 3--6 and 13--17, around the extrema
 of the sine, where the amplitude is easiest to read.
 
-\subsection{Q2: Agreement between methods on SIR}
+\subsection{Q2: Agreement between methods (SIR, GRF)}
 
 \begin{figure}[!tb]
 \centering
-\includegraphics[width=0.9\columnwidth]{sir/xai_02_integrated_gradients.png}\\[1mm]
-\begin{minipage}{0.42\columnwidth}\includegraphics[width=\linewidth]{sir/workflow_sir_saliency_map_saliency_map.png}\end{minipage}\hspace{3mm}
-\begin{minipage}{0.42\columnwidth}\includegraphics[width=\linewidth]{sir/xai_03a_attention_rollout_bar.png}\end{minipage}
-\caption{SIR, target $\lambda$. \textbf{Top:} IG by channel and over time. \textbf{Bottom left:} Saliency by
-channel. \textbf{Bottom right:} attention rollout per day (Transformer).}
+\includegraphics[width=\columnwidth]{sir/xai_05_method_comparison.png}
+\caption{SIR, target $\lambda$: mean $|$attribution$|$ per channel and day for three methods on the same GRU
+surrogate and the same 200 validation samples. Titles give each channel's share of the total.}
 \label{fig:sir-xai}
 \end{figure}
 
 \begin{table}[!tb]
 \centering
-\caption{SIR, target $\lambda$: channel ranking and temporal focus per method.}
+\caption{SIR, target $\lambda$: channel share of the total attribution (S/I/R), number of the 200 samples in
+which each channel dominates, and temporal focus. IG, Saliency and Masking use one GRU surrogate; rollout uses a
+separately trained Transformer.}
 \label{tab:sir}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}p{2.3cm}p{2.5cm}p{2.6cm}@{}}
+\begin{tabular}{@{}lccl@{}}
 \toprule
-Method & Channel ranking & Temporal focus \\
+Method & Share S/I/R (\%) & Dominant & Temporal focus \\
 \midrule
-IG (200 samples) & $S\gg R>I$ \newline (0.39/0.06/0.02) & days 0--3, 50--58 \\
-IG statistics (50) & $S$ dominant in 48/50 & days 1--2, 17--25, 54--59 \\
-Saliency & $R>S\gg I$ \newline (0.16/0.13/0.03) & -- \\
-Masking & -- & rising to last day \\
-Attention rollout & -- & days 49--53, last day \\
+IG & 83/3/13 & S: 195 & days 0--3, 50--58 \\
+Masking & 72/13/16 & S: 199 & days 0--4, last day \\
+Saliency & 36/19/45 & R: 154 & both ends \\
+Attention rollout & -- & -- & days 49--53, last day \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:sir} and Fig.~\ref{fig:sir-xai} show that the methods disagree. Paired $t$-tests on per-sample
-channel importance under IG are all significant ($p<10^{-27}$), so the dominance of $S$ is not noise. Saliency,
-which lacks the factor $(x_i-x'_i)$ of Eq.~\eqref{eq:ig}, ranks $R$ first. Since $S/N\approx1$ over most of the
-window while $I/N$ is a few percent, the zero baseline gives $S$ a far larger multiplier; the $S$-dominance
-under IG is therefore at least partly a baseline effect~\cite{sturmfels2020baselines}. The Transformer is trained
-on all five parameters jointly, so its rollout is identical for every target.
+On one surrogate (Table~\ref{tab:sir}, Fig.~\ref{fig:sir-xai}), IG and Masking agree: both rank $S$ first, in
+195 and 199 of 200 samples. Saliency ranks $R$ first in 154 samples. The time profiles agree more than the channel
+rankings (rank correlations 0.81--0.84 between all pairs). Paired $t$-tests on per-sample channel importance under
+IG are all significant ($p<10^{-27}$), so the dominance of $S$ is not noise. IG and Masking both measure change
+relative to the zero baseline, whereas Saliency lacks the factor $(x_i-x'_i)$ of Eq.~\eqref{eq:ig}. Since
+$S/N\approx1$ over most of the window while $I/N$ is a few percent, the zero baseline gives $S$ a far larger
+multiplier; the $S$-dominance is therefore at least partly a baseline effect~\cite{sturmfels2020baselines}. The
+Transformer is trained on all five parameters jointly, so its rollout is identical for every target.
 
 \paragraph{GRF} Mean IG and Saliency maps for $\alpha$ are diffuse over the interior with a dark frame of a few
 pixels, and $8\times8$ masking assigns the lowest importance to the outer patch columns. This matches the global
@@ -417,7 +420,7 @@ within $\pm50$\,ms of the merger.
 
 \begin{table}[!tb]
 \centering
-\caption{GW, target $m_1$: effect of input normalization (64 validation samples).}
+\caption{GW, attribution target $m_1$: effect of input normalization (64 validation samples). Validation MSE is averaged over both parameters, $m_1$ and $q$.}
 \label{tab:gw-norm}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
@@ -445,12 +448,12 @@ the sub-20\,Hz inspiral: the standard deviation at $-1$\,s grows from 33 (whiten
 $2.5\cdot10^5$. The 20\,Hz FIR high-pass reduces it only about sixfold. Every sample is dominated by a nearly
 monochromatic ${\sim}20$\,Hz oscillation with a bell-shaped envelope from $-1.5$ to $+0.5$\,s that continues past
 the merger, while the physical chirp is visible only in the last ${\sim}50$\,ms. Min-max scaling devotes almost
-the full $[0,1]$ range to this artefact. The simulator was deliberately left unmodified: the artefact is a finding
-of the attribution analysis: the higher validation error shows that the min-max model is worse, but not what it relies on.
+the full $[0,1]$ range to this artefact. The simulator was deliberately left unmodified, since the artefact is a finding
+of the attribution analysis. The higher validation error shows that the min-max model is worse, but not what it relies on.
 
 \subsection{Comparing methods on one model}
 
-On a z-score model (data seed 42, validation MSE 0.60), we compute IG, Saliency and Masking on the same 64
+On a z-score model (data seed 42, validation MSE 0.60 over both parameters), we compute IG, Saliency and Masking on the same 64
 samples (Table~\ref{tab:gw-methods}). The rank correlation of the time profiles is 0.99 between IG and Masking
 and 0.47 for both pairs involving Saliency. IG's mean convergence delta is 0.046, against a mean
 $|f(x)-f(x')|$ of 12.3. Saliency's peaks in the signal-free window fall on a regular 0.25\,s grid
@@ -488,16 +491,17 @@ merger, and following the attribution back into the simulator located the cause 
 GW, we cannot say whether recovery or SBC would have flagged this model.
 
 \paragraph{Agreement is more informative than a single map} IG and Masking agree almost perfectly on the GW
-model although one integrates gradients and the other uses only forward passes. Both measure change relative to
+model, and on the dominant channel for SIR, although one integrates gradients and the other uses only forward
+passes. Both measure change relative to
 the zero-strain baseline, so empty regions score near zero, whereas Saliency measures sensitivity, which can be
 high where there is no signal---in line with known failure modes of gradient
-maps~\cite{adebayo2018sanity,kindermans2019unreliability}. Where methods disagree, as on SIR (Q2), no single map
-should be trusted.
+maps~\cite{adebayo2018sanity,kindermans2019unreliability}. On both problems Saliency is the method that deviates, so a
+single gradient map should not be trusted on its own.
 
 \paragraph{Fingerprints of architecture and baseline}\label{sec:fingerprints}
 Several patterns stem from the model or the method rather than the data. The GRU surrogates read only the final
 hidden state, so the last time step reaches the output through a single update and dominates attributions
-(according to the code documentation, it is the arg-max in every sample under both a zero and a mean baseline);
+(in earlier development runs it was the arg-max of $|$IG$|$ in every sample under both a zero and a mean baseline);
 endpoints are therefore excluded from the rankings. Zero baselines favour large-magnitude channels under IG;
 zero padding darkens image borders; and the dilated GW embedding leaves a periodic grid in Saliency.
 
@@ -534,36 +538,32 @@ on a simulator artefact rather than the physical signal, leading to a better nor
 depend on architecture, baseline and training run, and are best read through agreement between methods.
 
 \paragraph{Reproducibility} Code, configurations and figures are available at
-\url{https://github.com/ferihabircan/bayesflow-xai}. During preparation of this report, a bug in the SIR
-recovered-compartment update (recoveries computed from the updated rather than the previous infected count) was
-fixed; it affected only the trajectories seen by the surrogates, and the SIR surrogate figures were regenerated
-with unchanged qualitative results.
+\url{https://github.com/ferihabircan/bayesflow-xai}.
 
 \begin{thebibliography}{99}
-\setlength{\itemsep}{1pt}
-\bibitem{abnar2020quantifying} S.~Abnar and W.~Zuidema. Quantifying attention flow in transformers. In \emph{ACL}, 2020.
-\bibitem{adebayo2018sanity} J.~Adebayo, J.~Gilmer, M.~Muelly, I.~Goodfellow, M.~Hardt, and B.~Kim. Sanity checks for saliency maps. In \emph{NeurIPS}, 2018.
-\bibitem{ancona2018towards} M.~Ancona, E.~Ceolini, C.~\"Oztireli, and M.~Gross. Towards better understanding of gradient-based attribution methods for deep neural networks. In \emph{ICLR}, 2018.
-\bibitem{cranmer2020frontier} K.~Cranmer, J.~Brehmer, and G.~Louppe. The frontier of simulation-based inference. \emph{PNAS}, 117(48), 2020.
-\bibitem{dax2021realtime} M.~Dax, S.~R.~Green, J.~Gair, J.~H.~Macke, A.~Buonanno, and B.~Sch\"olkopf. Real-time gravitational wave science with neural posterior estimation. \emph{Physical Review Letters}, 127, 2021.
-\bibitem{deistler2025practical} M.~Deistler et al. Simulation-based inference: A practical guide. arXiv preprint, 2025. Code: \url{https://github.com/sbi-dev/sbi-practical-guide}.
-\bibitem{dinh2017realnvp} L.~Dinh, J.~Sohl-Dickstein, and S.~Bengio. Density estimation using Real NVP. In \emph{ICLR}, 2017.
-\bibitem{durkan2019neural} C.~Durkan, A.~Bekasov, I.~Murray, and G.~Papamakarios. Neural spline flows. In \emph{NeurIPS}, 2019.
-\bibitem{greenberg2019automatic} D.~Greenberg, M.~Nonnenmacher, and J.~Macke. Automatic posterior transformation for likelihood-free inference. In \emph{ICML}, 2019.
-\bibitem{hermans2022trust} J.~Hermans, A.~Delaunoy, F.~Rozet, A.~Wehenkel, V.~Begy, and G.~Louppe. A trust crisis in simulation-based inference? Your posterior approximations can be unfaithful. \emph{TMLR}, 2022.
-\bibitem{kindermans2019unreliability} P.-J.~Kindermans, S.~Hooker, J.~Adebayo, M.~Alber, K.~T.~Sch\"utt, S.~D\"ahne, D.~Erhan, and B.~Kim. The (un)reliability of saliency methods. In \emph{Explainable AI: Interpreting, Explaining and Visualizing Deep Learning}, Springer, 2019.
-\bibitem{kokhlikyan2020captum} N.~Kokhlikyan et al. Captum: A unified and generic model interpretability library for PyTorch. arXiv:2009.07055, 2020.
-\bibitem{lundberg2017shap} S.~M.~Lundberg and S.-I.~Lee. A unified approach to interpreting model predictions. In \emph{NeurIPS}, 2017.
-\bibitem{papamakarios2016fast} G.~Papamakarios and I.~Murray. Fast $\epsilon$-free inference of simulation models with Bayesian conditional density estimation. In \emph{NeurIPS}, 2016.
-\bibitem{radev2020bayesflow} S.~T.~Radev, U.~K.~Mertens, A.~Voss, L.~Ardizzone, and U.~K\"othe. BayesFlow: Learning complex stochastic models with invertible neural networks. \emph{IEEE TNNLS}, 33(4), 2022.
-\bibitem{radev2021outbreakflow} S.~T.~Radev, F.~Graw, S.~Chen, N.~T.~Mutters, V.~M.~Eichel, T.~B\"arnighausen, and U.~K\"othe. OutbreakFlow: Model-based Bayesian inference of disease outbreak dynamics with invertible neural networks and its application to the COVID-19 pandemics in Germany. \emph{PLOS Computational Biology}, 17(10), 2021.
-\bibitem{radev2023bayesflow} S.~T.~Radev, M.~Schmitt, L.~Schumacher, L.~Elsem\"uller, V.~Pratz, Y.~Sch\"alte, U.~K\"othe, and P.-C.~B\"urkner. BayesFlow: Amortized Bayesian workflows with neural networks. \emph{Journal of Open Source Software}, 8(89), 2023.
-\bibitem{ribeiro2016lime} M.~T.~Ribeiro, S.~Singh, and C.~Guestrin. ``Why should I trust you?'' Explaining the predictions of any classifier. In \emph{KDD}, 2016.
-\bibitem{simonyan2014deep} K.~Simonyan, A.~Vedaldi, and A.~Zisserman. Deep inside convolutional networks: Visualising image classification models and saliency maps. In \emph{ICLR Workshop}, 2014.
-\bibitem{sturmfels2020baselines} P.~Sturmfels, S.~Lundberg, and S.-I.~Lee. Visualizing the impact of feature attribution baselines. \emph{Distill}, 2020.
-\bibitem{sundararajan2017axiomatic} M.~Sundararajan, A.~Taly, and Q.~Yan. Axiomatic attribution for deep networks. In \emph{ICML}, 2017.
-\bibitem{talts2018sbc} S.~Talts, M.~Betancourt, D.~Simpson, A.~Vehtari, and A.~Gelman. Validating Bayesian inference algorithms with simulation-based calibration. arXiv:1804.06788, 2018.
-\bibitem{zeiler2014visualizing} M.~D.~Zeiler and R.~Fergus. Visualizing and understanding convolutional networks. In \emph{ECCV}, 2014.
+\bibitem{abnar2020quantifying} S.~Abnar and W.~Zuidema, ``Quantifying attention flow in transformers,'' in \emph{Proc. 58th Annu. Meeting Assoc. Comput. Linguistics (ACL)}, 2020, pp.~4190--4197.
+\bibitem{adebayo2018sanity} J.~Adebayo, J.~Gilmer, M.~Muelly, I.~Goodfellow, M.~Hardt, and B.~Kim, ``Sanity checks for saliency maps,'' in \emph{Proc. Adv. Neural Inf. Process. Syst. (NeurIPS)}, 2018.
+\bibitem{ancona2018towards} M.~Ancona, E.~Ceolini, C.~\"Oztireli, and M.~Gross, ``Towards better understanding of gradient-based attribution methods for deep neural networks,'' in \emph{Proc. Int. Conf. Learn. Represent. (ICLR)}, 2018.
+\bibitem{cranmer2020frontier} K.~Cranmer, J.~Brehmer, and G.~Louppe, ``The frontier of simulation-based inference,'' \emph{Proc. Natl. Acad. Sci. USA}, vol.~117, no.~48, pp.~30055--30062, 2020.
+\bibitem{dax2021realtime} M.~Dax, S.~R.~Green, J.~Gair, J.~H.~Macke, A.~Buonanno, and B.~Sch\"olkopf, ``Real-time gravitational wave science with neural posterior estimation,'' \emph{Phys. Rev. Lett.}, vol.~127, no.~24, 2021, Art. no.~241103.
+\bibitem{deistler2025practical} M.~Deistler \emph{et al.}, ``Simulation-based inference: A practical guide,'' arXiv preprint, 2025. [Online]. Available: \url{https://github.com/sbi-dev/sbi-practical-guide}
+\bibitem{dinh2017realnvp} L.~Dinh, J.~Sohl-Dickstein, and S.~Bengio, ``Density estimation using Real NVP,'' in \emph{Proc. Int. Conf. Learn. Represent. (ICLR)}, 2017.
+\bibitem{durkan2019neural} C.~Durkan, A.~Bekasov, I.~Murray, and G.~Papamakarios, ``Neural spline flows,'' in \emph{Proc. Adv. Neural Inf. Process. Syst. (NeurIPS)}, 2019.
+\bibitem{greenberg2019automatic} D.~Greenberg, M.~Nonnenmacher, and J.~Macke, ``Automatic posterior transformation for likelihood-free inference,'' in \emph{Proc. Int. Conf. Mach. Learn. (ICML)}, 2019, pp.~2404--2414.
+\bibitem{hermans2022trust} J.~Hermans, A.~Delaunoy, F.~Rozet, A.~Wehenkel, V.~Begy, and G.~Louppe, ``A trust crisis in simulation-based inference? Your posterior approximations can be unfaithful,'' \emph{Trans. Mach. Learn. Res.}, 2022.
+\bibitem{kindermans2019unreliability} P.-J.~Kindermans \emph{et al.}, ``The (un)reliability of saliency methods,'' in \emph{Explainable AI: Interpreting, Explaining and Visualizing Deep Learning} (Lecture Notes in Computer Science, vol.~11700). Cham, Switzerland: Springer, 2019, pp.~267--280.
+\bibitem{kokhlikyan2020captum} N.~Kokhlikyan \emph{et al.}, ``Captum: A unified and generic model interpretability library for PyTorch,'' 2020, \emph{arXiv:2009.07055}.
+\bibitem{lundberg2017shap} S.~M.~Lundberg and S.-I.~Lee, ``A unified approach to interpreting model predictions,'' in \emph{Proc. Adv. Neural Inf. Process. Syst. (NeurIPS)}, 2017.
+\bibitem{papamakarios2016fast} G.~Papamakarios and I.~Murray, ``Fast $\epsilon$-free inference of simulation models with Bayesian conditional density estimation,'' in \emph{Proc. Adv. Neural Inf. Process. Syst. (NeurIPS)}, 2016.
+\bibitem{radev2020bayesflow} S.~T.~Radev, U.~K.~Mertens, A.~Voss, L.~Ardizzone, and U.~K\"othe, ``BayesFlow: Learning complex stochastic models with invertible neural networks,'' \emph{IEEE Trans. Neural Netw. Learn. Syst.}, vol.~33, no.~4, pp.~1452--1466, 2022.
+\bibitem{radev2021outbreakflow} S.~T.~Radev \emph{et al.}, ``OutbreakFlow: Model-based Bayesian inference of disease outbreak dynamics with invertible neural networks and its application to the COVID-19 pandemics in Germany,'' \emph{PLOS Comput. Biol.}, vol.~17, no.~10, 2021, Art. no.~e1009472.
+\bibitem{radev2023bayesflow} S.~T.~Radev \emph{et al.}, ``BayesFlow: Amortized Bayesian workflows with neural networks,'' \emph{J. Open Source Softw.}, vol.~8, no.~89, 2023, Art. no.~5702.
+\bibitem{ribeiro2016lime} M.~T.~Ribeiro, S.~Singh, and C.~Guestrin, ```Why should I trust you?' Explaining the predictions of any classifier,'' in \emph{Proc. 22nd ACM SIGKDD Int. Conf. Knowl. Discov. Data Min.}, 2016, pp.~1135--1144.
+\bibitem{simonyan2014deep} K.~Simonyan, A.~Vedaldi, and A.~Zisserman, ``Deep inside convolutional networks: Visualising image classification models and saliency maps,'' in \emph{Proc. Int. Conf. Learn. Represent. (ICLR) Workshop}, 2014.
+\bibitem{sturmfels2020baselines} P.~Sturmfels, S.~Lundberg, and S.-I.~Lee, ``Visualizing the impact of feature attribution baselines,'' \emph{Distill}, 2020.
+\bibitem{sundararajan2017axiomatic} M.~Sundararajan, A.~Taly, and Q.~Yan, ``Axiomatic attribution for deep networks,'' in \emph{Proc. Int. Conf. Mach. Learn. (ICML)}, 2017, pp.~3319--3328.
+\bibitem{talts2018sbc} S.~Talts, M.~Betancourt, D.~Simpson, A.~Vehtari, and A.~Gelman, ``Validating Bayesian inference algorithms with simulation-based calibration,'' 2018, \emph{arXiv:1804.06788}.
+\bibitem{zeiler2014visualizing} M.~D.~Zeiler and R.~Fergus, ``Visualizing and understanding convolutional networks,'' in \emph{Proc. Eur. Conf. Comput. Vis. (ECCV)}, 2014, pp.~818--833.
 \end{thebibliography}
 
 \end{document}

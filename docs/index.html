@@ -339,7 +339,7 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
         physically meaningful part of the data is usually checked only indirectly, through parameter recovery
         and calibration. This project applies four post-hoc explanation methods &mdash; Integrated Gradients,
         Saliency Maps, Attention Rollout and Masking/Occlusion &mdash; to summary networks trained on four
-        simulators of increasing complexity: a stationary SIR epidemic model, a Lotka-Volterra-style sinusoidal
+        simulators of increasing complexity: a stationary SIR epidemic model, a sinusoidal
         signal, a Gaussian Random Field, and a gravitational-wave benchmark. All combinations are run through
         one config-driven plugin registry.
       </p>
@@ -349,9 +349,9 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
         shows that a network trained on min-max-scaled inputs ignores the merger and relies on a non-physical
         ~20&nbsp;Hz whitening artefact of the original simulator; z-score inputs move the attribution onto the
         merger and cut validation error from 9.27 to 1.41. Integrated Gradients and Masking agree closely
-        (rank correlation 0.99), while plain Saliency puts most of its mass in signal-free regions. The SIR
-        experiments show the limits: methods disagree on which population channel matters, and recurrent
-        read-outs bias attributions toward sequence endpoints.
+        (rank correlation 0.99), while plain Saliency puts most of its mass in signal-free regions. On one SIR
+        surrogate the same split appears: IG and Masking agree on the dominant channel while Saliency does not,
+        and the zero baseline and the recurrent read-out visibly shape the maps.
       </p>
     </div>
   </div>
@@ -459,7 +459,7 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
       </div>
       <div class="card reveal">
         <span class="tag">time series &middot; 20&times;2</span>
-        <h4>Lotka-Volterra-style</h4>
+        <h4>Sinusoidal toy signal</h4>
         <p>Despite its name, a sinusoid: channel <i>X<sub>k</sub></i> = &theta;<sub>k</sub>&middot;sin(2&pi;t(1+&theta;<sub>2</sub>)) plus noise. The
         ground truth of which channel carries which parameter is known.</p>
         <p class="params">&theta;&#8320;, &theta;&#8321;, &theta;&#8322;</p>
@@ -556,20 +556,20 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
 
     <!-- SIR -->
     <div class="panel" data-panel="r-sir" role="tabpanel">
-      <h3>SIR: the methods do not agree on which channel matters</h3>
+      <h3>SIR: baseline-relative methods agree, Saliency does not</h3>
       <p class="prose">
         The SIR surrogate (GRU on the full S, I, R trajectories) only learns &lambda; well (held-out R&sup2; = 0.90;
         R&sup2; &le; 0.03 for &mu;, D, I&#8320;, &psi;), so all SIR explanations target &lambda;.
       </p>
+      <p class="prose">IG, Saliency and Masking below are computed on <b>one</b> GRU surrogate and the same 200 validation samples (<code>scripts/run_sir_method_comparison.py</code>).</p>
       <div class="table-wrap reveal">
         <table>
-          <thead><tr><th>Method</th><th>Channel ranking for &lambda;</th><th>Where in time</th></tr></thead>
+          <thead><tr><th>Method (target &lambda;)</th><th>Share S / I / R</th><th>Dominant channel</th><th>Where in time</th></tr></thead>
           <tbody>
-            <tr><td>Integrated Gradients (zero baseline, 200 samples)</td><td class="num">S &#8811; R &gt; I &nbsp;(0.39 / 0.06 / 0.02)</td><td>days 0&ndash;3 and 50&ndash;58</td></tr>
-            <tr><td>IG statistics (50 samples)</td><td class="num">S dominant in 48 / 50</td><td>interior top-5 at days 1&ndash;2, 17&ndash;25, 54&ndash;59</td></tr>
-            <tr><td>Saliency Map</td><td class="num">R &gt; S &#8811; I &nbsp;(0.16 / 0.13 / 0.03)</td><td>&mdash;</td></tr>
-            <tr><td>Masking (per time step)</td><td>&mdash; (all channels masked together)</td><td>rises toward the last day; small bump at days 1&ndash;4</td></tr>
-            <tr><td>Attention Rollout (Transformer)</td><td>&mdash; (time only)</td><td>days 49&ndash;53 and the last day</td></tr>
+            <tr><td>Integrated Gradients (zero baseline)</td><td class="num">83 / 3 / 13 %</td><td class="num">S in 195 / 200</td><td>days 0&ndash;3 and 50&ndash;58</td></tr>
+            <tr><td>Masking (one day &times; channel set to 0)</td><td class="num">72 / 13 / 16 %</td><td class="num">S in 199 / 200</td><td>days 0&ndash;4 and the last day</td></tr>
+            <tr><td>Saliency Map</td><td class="num">36 / 19 / 45 %</td><td class="num">R in 154 / 200</td><td>both ends of the window</td></tr>
+            <tr><td>Attention Rollout (separate Transformer)</td><td>&mdash;</td><td>&mdash;</td><td>days 49&ndash;53 and the last day</td></tr>
           </tbody>
         </table>
       </div>
@@ -579,17 +579,15 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
         reaches the output through one update and dominates |attribution| almost by construction; this is why the
         statistics exclude both endpoints, and why Masking peaks at the last step. (2) <i>Baseline effect:</i> IG
         multiplies the gradient by (<i>x</i> &minus; baseline). With a zero baseline, S (&asymp; 1 for most of the window)
-        gets a large factor while I (a few percent) gets a small one. Saliency, which has no such factor, ranks R
-        first. The S-dominance under IG is therefore at least partly a property of the baseline, not only of the
-        model.</p>
+        gets a large factor while I (a few percent) gets a small one. Masking, which also replaces inputs by the zero baseline, agrees with IG; Saliency, which has no such factor,
+        ranks R first. The S-dominance is therefore at least partly a property of the baseline, not only of the
+        model. The time profiles of the three methods agree more closely (rank correlation 0.81&ndash;0.84).</p>
       </div>
+      <figure class="reveal fig"><a class="frame" href="figures/sir/xai_05_method_comparison.png"><img src="figures/sir/xai_05_method_comparison.png" alt="IG, Saliency and Masking per channel and day on one SIR surrogate" loading="lazy"></a>
+        <figcaption><b>Three methods on one surrogate.</b> Mean |attribution| per channel and day; titles give each channel's share.</figcaption></figure>
       <div class="grid2">
         <figure class="reveal fig"><a class="frame" href="figures/sir/xai_02_integrated_gradients.png"><img src="figures/sir/xai_02_integrated_gradients.png" alt="SIR Integrated Gradients by channel and over time" loading="lazy"></a>
-          <figcaption><b>Integrated Gradients</b>, by channel and over time.</figcaption></figure>
-        <figure class="reveal fig"><a class="frame" href="figures/sir/workflow_sir_saliency_map_saliency_map.png"><img src="figures/sir/workflow_sir_saliency_map_saliency_map.png" alt="SIR saliency channel importance" loading="lazy"></a>
-          <figcaption><b>Saliency Map</b>, by channel.</figcaption></figure>
-        <figure class="reveal fig"><a class="frame" href="figures/sir/workflow_sir_masking_masking_time_importance.png"><img src="figures/sir/workflow_sir_masking_masking_time_importance.png" alt="SIR masking importance over time" loading="lazy"></a>
-          <figcaption><b>Masking</b>, prediction shift when one day is zeroed.</figcaption></figure>
+          <figcaption><b>Integrated Gradients</b>, by channel and over time (same surrogate).</figcaption></figure>
         <figure class="reveal fig"><a class="frame" href="figures/sir/xai_03a_attention_rollout_bar.png"><img src="figures/sir/xai_03a_attention_rollout_bar.png" alt="SIR attention rollout per day" loading="lazy"></a>
           <figcaption><b>Attention Rollout</b>, mean attention received per day. The Transformer is trained on all five parameters jointly, so the rollout does not depend on the target.</figcaption></figure>
       </div>
@@ -702,7 +700,7 @@ figure.fig .frame:hover { box-shadow: var(--shadow); border-color: var(--accent)
     <h2>Discussion</h2>
     <div class="grid3" style="margin-top:18px">
       <div class="card reveal"><h4>Attributions explain what metrics cannot</h4><p>Validation error shows that the min-max GW model is worse; IG showed why: it reads the whitening artefact instead of the merger.</p></div>
-      <div class="card reveal"><h4>Agreement is the useful signal</h4><p>IG and Masking agree on the GW model (&rho; = 0.99) although one uses gradients and the other only forward passes. Where methods disagree (SIR channels), no single map should be trusted.</p></div>
+      <div class="card reveal"><h4>Agreement is the useful signal</h4><p>IG and Masking agree on the GW model (&rho; = 0.99) although one uses gradients and the other only forward passes. On SIR, IG and Masking also agree on the dominant channel; on both problems Saliency is the one that deviates.</p></div>
       <div class="card reveal"><h4>Architecture and baseline shape the maps</h4><p>Last-state GRU read-outs inflate endpoints, zero baselines favour large-magnitude channels, CNN padding darkens borders, dilations leave a grid in Saliency.</p></div>
     </div>
   </div>
@@ -878,9 +876,9 @@ https://github.com/ferihabircan/bayesflow-xai</code></pre>
   var FIGS = {
     sir: {
       integrated_gradients: ['figures/sir/xai_02_integrated_gradients.png', 'GRU surrogate, target λ, zero baseline. S dominates; time profile peaks at the start and near the end of the window.'],
-      saliency_map: ['figures/sir/workflow_sir_saliency_map_saliency_map.png', 'Raw |gradient| summed over time: R > S > I, a different ranking from Integrated Gradients.'],
+      saliency_map: ['figures/sir/xai_05_method_comparison.png', 'One surrogate, three methods: Saliency (middle) gives R the largest share (45%), unlike IG and Masking.'],
       attention_rollout: ['figures/sir/xai_03b_attention_connections.png', 'Transformer summary network: rolled-out attention between days (top-15 links per query day).'],
-      masking: ['figures/sir/workflow_sir_masking_masking_time_importance.png', 'Zeroing one day at a time: importance rises toward the last day (GRU last-state read-out), with a small bump at days 1–4.']
+      masking: ['figures/sir/xai_05_method_comparison.png', 'One surrogate, three methods: Masking (right) agrees with IG that S dominates (72%).']
     },
     lotka_volterra: {
       integrated_gradients: ['figures/lotka_volterra/xai_lv_04_channel_time_importance_stats.png', 'Target θ0, which scales X1 by construction: X1 is the dominant channel in 188 of 200 samples.']

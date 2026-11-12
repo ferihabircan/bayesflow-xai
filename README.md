@@ -88,6 +88,7 @@ PyCBC is not installed).
 | Quick smoke run of the same | `python scripts/run_workflow.py --config configs/workflow_example.yaml --n_sims 200 --epochs 2` |
 | Train the SIR posterior + see BayesFlow diagnostics | `python scripts/run_diagnostics.py` |
 | SIR: latent space + Integrated Gradients + Attention Rollout | `python scripts/run_xai.py --target lambd` (add `--stats` for channel/time statistics) |
+| SIR: IG vs Saliency vs Masking on one surrogate | `python scripts/run_sir_method_comparison.py --target lambd` |
 | Lotka-Volterra: channel/time importance stats | `python scripts/run_lv_xai.py --target theta0 --stats` |
 | GRF: pixel-level Integrated Gradients | `python scripts/run_grf_xai.py --target alpha` |
 | GRF: reproduce the BayesFlow spatial-data tutorial | `python scripts/run_grf_tutorial_31.py` / `run_grf_tutorial_32.py` (`--smoke-test` for a quick check) |
