@@ -1,50 +1,37 @@
-\documentclass[10pt,twocolumn]{article}
-
-\usepackage[a4paper,margin=18mm,columnsep=7mm]{geometry}
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
 \usepackage[T1]{fontenc}
 \usepackage{newtxtext,newtxmath}
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{multirow}
 \usepackage{xcolor}
-\usepackage[font=small,labelfont=bf,skip=4pt]{caption}
-\usepackage{subcaption}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
 \usepackage{enumitem}
-\usepackage[numbers,sort&compress]{natbib}
-\usepackage{titlesec}
-\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
-
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
 \graphicspath{{figures/}{../docs/figures/}}
 \setlist{itemsep=1pt,topsep=3pt,leftmargin=*}
-\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{0.6em}{}
-\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{0.6em}{}
-\titlespacing*{\section}{0pt}{9pt}{4pt}
-\titlespacing*{\subsection}{0pt}{7pt}{3pt}
 \newcommand{\IG}{\mathrm{IG}}
 \newcommand{\E}{\mathbb{E}}
 \definecolor{accent}{HTML}{2B5797}
 \definecolor{warn}{HTML}{B36B00}
 
-\title{\Large\bfseries Attribution-Based Explanations of Neural Summary Networks\\[2pt]
-in Amortized Simulation-Based Inference}
-\author{Feriha Bircan\\[2pt]
-\small Research internship project\\
-\small\url{https://github.com/ferihabircan/bayesflow-xai}}
-\date{October 2026}
-
 \begin{document}
 
-\twocolumn[
-\begin{@twocolumnfalse}
+\title{Attribution-Based Explanations of Neural Summary Networks in Amortized Simulation-Based Inference}
+
+\author{\IEEEauthorblockN{Feriha Bircan}
+\IEEEauthorblockA{Research internship project\\
+\url{https://github.com/ferihabircan/bayesflow-xai}}}
+
 \maketitle
-\vspace{-4mm}
+
 \begin{abstract}
-\noindent
 Amortized Bayesian inference with BayesFlow compresses raw simulator output into a learned summary vector
 before a conditional normalizing flow maps it to a posterior distribution. Whether this summary is built from
 the physically meaningful part of the data is usually assessed only indirectly, through parameter recovery and
@@ -62,9 +49,10 @@ Masking agree closely (rank correlation 0.99), whereas Saliency places 58\% of i
 The SIR experiments delimit the approach: methods disagree on the relevant input channel, and the recurrent
 read-out and the attribution baseline leave identifiable fingerprints on the maps.
 \end{abstract}
-\vspace{5mm}
-\end{@twocolumnfalse}
-]
+
+\begin{IEEEkeywords}
+simulation-based inference, amortized Bayesian inference, explainable AI, feature attribution, normalizing flows
+\end{IEEEkeywords}
 
 %======================================================================
 \section{Introduction}
@@ -95,7 +83,7 @@ They are widely used for image classifiers but rarely for the summary networks o
   \item Can attributions reveal simulator-induced problems that a model's loss alone does not explain?
 \end{enumerate}
 
-\paragraph{Contributions.}
+\paragraph{Contributions}
 (i)~An open-source plugin registry in which simulators, summary networks, inference networks and attribution
 methods are registered by name and combined from a configuration file.
 (ii)~A study of four attribution methods on four simulators, including a gravitational-wave benchmark from the
@@ -107,7 +95,7 @@ the original normalization relies on, together with a quantitative comparison of
 \section{Related Work}
 %======================================================================
 
-\paragraph{Amortized and neural SBI.}
+\paragraph{Amortized and neural SBI}
 Neural posterior estimation learns $q(\theta\mid x)$ directly from simulations~\cite{papamakarios2016fast,greenberg2019automatic};
 BayesFlow~\cite{radev2020bayesflow,radev2023bayesflow} couples learned summary statistics with invertible
 networks~\cite{dinh2017realnvp,durkan2019neural}, and has been applied, among others, to epidemiological
@@ -116,7 +104,7 @@ real-time parameter inference~\cite{dax2021realtime}. Validation relies on calib
 SBC~\cite{talts2018sbc}, and Hermans et al.~\cite{hermans2022trust} showed that SBI posteriors can be
 overconfident, motivating additional diagnostics.
 
-\paragraph{Feature attribution.}
+\paragraph{Feature attribution}
 Gradient-based methods range from raw input gradients~\cite{simonyan2014deep} to path-integrated
 gradients~\cite{sundararajan2017axiomatic}; perturbation-based methods occlude input regions~\cite{zeiler2014visualizing};
 model-agnostic surrogates include LIME~\cite{ribeiro2016lime} and SHAP~\cite{lundberg2017shap}. For
@@ -182,7 +170,7 @@ which needs one forward pass per region and no gradients.
 \section{Method}
 %======================================================================
 
-\begin{figure}[t]
+\begin{figure}[!tb]
 \centering
 \resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
@@ -252,7 +240,7 @@ selected method. Adding a simulator or method requires only a decorated function
 
 \subsection{Simulators}
 
-\paragraph{SIR epidemic.} The stationary SIR model of the BayesFlow tutorial~\cite{radev2021outbreakflow}, in
+\paragraph{SIR epidemic} The stationary SIR model of the BayesFlow tutorial~\cite{radev2021outbreakflow}, in
 discrete time with population $N=83\cdot10^6$:
 \begin{equation}
 \begin{aligned}
@@ -266,18 +254,18 @@ $D\sim\mathrm{LogN}(\log 8,0.2)$, $I_0\sim\Gamma(2,20)$, $\psi\sim\mathrm{Exp}$ 
 $\log(1+\text{cases})$; the surrogates see the noise-free fractions $(S,I,R)/N\in\mathbb{R}^{60\times3}$ and regress
 $\log(1+\theta)$.
 
-\paragraph{Toy signal (``Lotka--Volterra-style'').} Despite its name, not the predator--prey ODE: with
+\paragraph{Toy signal (``Lotka--Volterra-style'')} Despite its name, not the predator--prey ODE: with
 $\theta\sim\mathcal{U}(-1,1)^3$ and 20 time points $t\in[0,1]$,
 \begin{equation}
   X_k(t)=\theta_{k-1}\sin\!\big(2\pi t(1+\theta_2)\big)+0.05\,\varepsilon,\quad k\in\{1,2\}.
 \end{equation}
 Thus $\theta_0$ affects only $X_1$: a ground truth for attribution.
 
-\paragraph{Gaussian random field (GRF).} A $64\times64$ field with power spectrum $P(k)=k^{-\alpha}\sigma^2$,
+\paragraph{Gaussian random field (GRF)} A $64\times64$ field with power spectrum $P(k)=k^{-\alpha}\sigma^2$,
 $\log\sigma\sim\mathcal{N}(0,1)$, $\alpha\sim\mathcal{N}(4,0.5)$, from the BayesFlow spatial-data
 example. The repository also reproduces the example's conditional diffusion model that generates fields.
 
-\paragraph{Gravitational wave (GW).} The original benchmark simulator of the SBI practical
+\paragraph{Gravitational wave (GW)} The original benchmark simulator of the SBI practical
 guide~\cite{deistler2025practical}, vendored unchanged: a binary black-hole merger (PyCBC, IMRPhenomPv2) with
 $m_1\sim\mathcal{U}(40,80)$ and $q=m_2/m_1\sim\mathcal{U}(0.25,0.99)$, projected onto the LIGO H1 and L1
 detectors, with simulated noise, whitened and high-passed at 20\,Hz; 4\,s at 2048\,Hz (8192 samples per
@@ -291,7 +279,7 @@ single time steps (all channels) or $8\times8$ patches with zeros; for GW it occ
 windows of one detector at a time. For the SIR and toy-signal statistics the first and last time step are
 excluded from importance rankings (Sec.~\ref{sec:fingerprints}).
 
-\begin{table}[t]
+\begin{table}[!tb]
 \centering
 \caption{Summary networks and training budgets of the attribution surrogates (and the BayesFlow posteriors).}
 \label{tab:setup}
@@ -346,7 +334,7 @@ targets are not standardized, so the loss is dominated by $I_0$ and $\psi$ (vari
 $\log(1+\cdot)$ scale), and $\psi$ is not identifiable from noise-free trajectories at all. All SIR explanations
 therefore target $\lambda$.
 
-\begin{table}[t]
+\begin{table}[!tb]
 \centering
 \caption{Held-out $R^2$ of the GRU surrogates.}
 \label{tab:r2}
@@ -364,7 +352,7 @@ Toy signal & $\theta_0$ & $\theta_1$ & $\theta_2$ & & \\
 
 \subsection{Q1: Recovering a known ground truth}
 
-\begin{figure}[t]
+\begin{figure}[!tb]
 \centering
 \includegraphics[width=\columnwidth]{lotka_volterra/xai_lv_04_channel_time_importance_stats.png}
 \caption{Toy signal, IG for target $\theta_0$ over 200 validation samples. \textbf{Left:} dominant channel per
@@ -379,17 +367,17 @@ of the sine, where the amplitude is easiest to read.
 
 \subsection{Q2: Agreement between methods on SIR}
 
-\begin{figure}[t]
+\begin{figure}[!tb]
 \centering
 \includegraphics[width=0.9\columnwidth]{sir/xai_02_integrated_gradients.png}\\[1mm]
-\begin{subfigure}{0.42\columnwidth}\includegraphics[width=\linewidth]{sir/workflow_sir_saliency_map_saliency_map.png}\end{subfigure}\hspace{3mm}
-\begin{subfigure}{0.42\columnwidth}\includegraphics[width=\linewidth]{sir/xai_03a_attention_rollout_bar.png}\end{subfigure}
+\begin{minipage}{0.42\columnwidth}\includegraphics[width=\linewidth]{sir/workflow_sir_saliency_map_saliency_map.png}\end{minipage}\hspace{3mm}
+\begin{minipage}{0.42\columnwidth}\includegraphics[width=\linewidth]{sir/xai_03a_attention_rollout_bar.png}\end{minipage}
 \caption{SIR, target $\lambda$. \textbf{Top:} IG by channel and over time. \textbf{Bottom left:} Saliency by
 channel. \textbf{Bottom right:} attention rollout per day (Transformer).}
 \label{fig:sir-xai}
 \end{figure}
 
-\begin{table}[t]
+\begin{table}[!tb]
 \centering
 \caption{SIR, target $\lambda$: channel ranking and temporal focus per method.}
 \label{tab:sir}
@@ -415,7 +403,7 @@ window while $I/N$ is a few percent, the zero baseline gives $S$ a far larger mu
 under IG is therefore at least partly a baseline effect~\cite{sturmfels2020baselines}. The Transformer is trained
 on all five parameters jointly, so its rollout is identical for every target.
 
-\paragraph{GRF.} Mean IG and Saliency maps for $\alpha$ are diffuse over the interior with a dark frame of a few
+\paragraph{GRF} Mean IG and Saliency maps for $\alpha$ are diffuse over the interior with a dark frame of a few
 pixels, and $8\times8$ masking assigns the lowest importance to the outer patch columns. This matches the global
 role of $\alpha$ (spatial correlation), and the dark frame is consistent with zero padding, which gives border
 pixels fewer receptive fields.
@@ -427,7 +415,7 @@ Using identical simulations (5000, data seed 0) and training, we vary only the i
 near $-0.7$, $-0.2$ and $+0.3$\,s, where the merger contributes almost nothing; no sample has its attribution peak
 within $\pm50$\,ms of the merger.
 
-\begin{table}[t]
+\begin{table}[!tb]
 \centering
 \caption{GW, target $m_1$: effect of input normalization (64 validation samples).}
 \label{tab:gw-norm}
@@ -443,7 +431,7 @@ z-score & \textbf{1.41} & $-4.9$\,ms & \textbf{100\%} & 40\% \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[!tb]
 \centering
 \includegraphics[width=\columnwidth]{gw_ig_time_compact.png}
 \caption{GW, mean $|$IG$|$ over time (s, relative to the H1 merger) for min-max (top) and z-score inputs (bottom);
@@ -469,7 +457,7 @@ $|f(x)-f(x')|$ of 12.3. Saliency's peaks in the signal-free window fall on a reg
 (512 samples $=2^9$, one of the embedding's dilations), suggesting an architectural origin; this is an
 observation, not a tested claim.
 
-\begin{table}[t]
+\begin{table}[!tb]
 \centering
 \caption{GW, one z-score model: IG vs.\ Saliency vs.\ Masking. Signal energy H1/L1: 45/55.}
 \label{tab:gw-methods}
@@ -493,27 +481,27 @@ H1/L1 attribution & 57/43 & 60/40 & 59/41 \\
 \section{Discussion}
 %======================================================================
 
-\paragraph{Attribution complements performance metrics.} The validation error of the min-max GW model is higher than
+\paragraph{Attribution complements performance metrics} The validation error of the min-max GW model is higher than
 that of the z-score model, but it does not show why. The attribution analysis showed that the model ignored the
 merger, and following the attribution back into the simulator located the cause (Q3). Attribution addresses
 \emph{what} a network learned, a question that error metrics do not answer. Because no posterior was trained for
 GW, we cannot say whether recovery or SBC would have flagged this model.
 
-\paragraph{Agreement is more informative than a single map.} IG and Masking agree almost perfectly on the GW
+\paragraph{Agreement is more informative than a single map} IG and Masking agree almost perfectly on the GW
 model although one integrates gradients and the other uses only forward passes. Both measure change relative to
 the zero-strain baseline, so empty regions score near zero, whereas Saliency measures sensitivity, which can be
 high where there is no signal---in line with known failure modes of gradient
 maps~\cite{adebayo2018sanity,kindermans2019unreliability}. Where methods disagree, as on SIR (Q2), no single map
 should be trusted.
 
-\paragraph{Fingerprints of architecture and baseline.}\label{sec:fingerprints}
+\paragraph{Fingerprints of architecture and baseline}\label{sec:fingerprints}
 Several patterns stem from the model or the method rather than the data. The GRU surrogates read only the final
 hidden state, so the last time step reaches the output through a single update and dominates attributions
 (according to the code documentation, it is the arg-max in every sample under both a zero and a mean baseline);
 endpoints are therefore excluded from the rankings. Zero baselines favour large-magnitude channels under IG;
 zero padding darkens image borders; and the dilated GW embedding leaves a periodic grid in Saliency.
 
-\paragraph{Detector preference is not robust.} The H1 preference of 57--60\% is consistent across methods for one
+\paragraph{Detector preference is not robust} The H1 preference of 57--60\% is consistent across methods for one
 model, but an earlier z-score model (data seed 0) gave H1/L1 = 46/54, close to its signal energy (42/58). It is a
 property of a training run, not a physical result.
 
@@ -545,13 +533,12 @@ known structure; on a realistic gravitational-wave benchmark, Integrated Gradien
 on a simulator artefact rather than the physical signal, leading to a better normalization. Attributions also
 depend on architecture, baseline and training run, and are best read through agreement between methods.
 
-\paragraph{Reproducibility.} Code, configurations and figures are available at
+\paragraph{Reproducibility} Code, configurations and figures are available at
 \url{https://github.com/ferihabircan/bayesflow-xai}. During preparation of this report, a bug in the SIR
 recovered-compartment update (recoveries computed from the updated rather than the previous infected count) was
 fixed; it affected only the trajectories seen by the surrogates, and the SIR surrogate figures were regenerated
 with unchanged qualitative results.
 
-\small
 \begin{thebibliography}{99}
 \setlength{\itemsep}{1pt}
 \bibitem{abnar2020quantifying} S.~Abnar and W.~Zuidema. Quantifying attention flow in transformers. In \emph{ACL}, 2020.
